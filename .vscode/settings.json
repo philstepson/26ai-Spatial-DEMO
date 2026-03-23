@@ -1,0 +1,53 @@
+{
+  // ── Oracle Developer Tools for VSCode ──────────────────────────────────
+  // Connection profile for the Fleet Demo ADW database.
+  // Fill in your actual wallet path, username, and service name.
+  "oracle.connections": [
+    {
+      "name":        "Fleet Demo – ADW",
+      "connectType": "CloudWallet",
+      "walletFile":  "${env:HOME}/wallet/Wallet_YourDB.zip",
+      "username":    "fleet_demo",
+      "service":     "yourdb_medium",
+      "savePassword": false
+    }
+  ],
+
+  // ── SQLcl MCP Server (invoked as  sql /nolog -mcp) ───────────────────
+  // When using Claude Code with MCP, register the server below.
+  // See  config/mcp_servers.json  for the full MCP config block.
+  "mcp.servers": {
+    "oracle-fleet-db": {
+      "command": "sql",
+      "args":    ["/nolog", "-mcp"]
+    }
+  },
+
+  // ── Editor preferences for SQL files ────────────────────────────────
+  "[sql]": {
+    "editor.tabSize":           2,
+    "editor.insertSpaces":      true,
+    "editor.wordWrap":          "on",
+    "editor.rulers":            [80, 120],
+    "editor.formatOnSave":      false
+  },
+
+  // ── File associations ────────────────────────────────────────────────
+  "files.associations": {
+    "*.sql": "sql",
+    "*.pls": "sql",
+    "*.pks": "sql",
+    "*.pkb": "sql"
+  },
+
+  // ── Draw.io: open .drawio files in the built-in viewer ──────────────
+  "hediet.vscode-drawio.theme": "Kennedy",
+
+  // ── Exclude wallet files from search / git ───────────────────────────
+  "search.exclude": {
+    "**/wallet/**": true
+  },
+  "files.exclude": {
+    "**/.DS_Store": true
+  }
+}

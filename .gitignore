@@ -1,0 +1,22 @@
+# Oracle Wallet – NEVER commit
+wallet/*.zip
+wallet/*.sso
+wallet/*.p12
+wallet/*.jks
+wallet/ojdbc.properties
+wallet/sqlnet.ora
+wallet/tnsnames.ora
+wallet/truststore.jks
+wallet/cwallet.sso
+
+# Connection credentials
+config/connection.properties
+*.properties
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*~

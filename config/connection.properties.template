@@ -1,0 +1,24 @@
+# ============================================================================
+# Oracle 26ai Fleet Demo – SQLcl Connection Properties Template
+# Copy this file to connection.properties and fill in your values.
+# DO NOT commit connection.properties to source control.
+# ============================================================================
+
+# ── ADW Wallet location ──────────────────────────────────────────────────────
+# Path to your downloaded Wallet_<DBName>.zip
+# Download from: OCI Console → Autonomous Database → DB Connection → Download Wallet
+WALLET_LOCATION=/path/to/your/wallet/Wallet_YourDB.zip
+
+# ── Connection credentials ──────────────────────────────────────────────────
+DB_USERNAME=fleet_demo          # or ADMIN for first run
+DB_PASSWORD=YourSecureP@ssword1!
+
+# ── Service name ─────────────────────────────────────────────────────────────
+# Find available service names inside wallet/tnsnames.ora
+# Typical ADW service names: <dbname>_high | <dbname>_medium | <dbname>_low
+DB_SERVICE=yourdb_medium
+
+# ── SQLcl connection string ──────────────────────────────────────────────────
+# Use this in SQLcl after SET CLOUDCONFIG:
+#   SET CLOUDCONFIG /path/to/Wallet_YourDB.zip
+#   CONNECT fleet_demo/YourSecureP@ssword1!@yourdb_medium

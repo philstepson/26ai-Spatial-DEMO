@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    // Oracle SQLcl / SQL Developer extension
+    // Provides: SQL editor, connection manager, Oracle Spatial map viewer
+    "oracle.oracle-developer-tools-for-vscode",
+
+    // Oracle REST Data Services (ORDS) / Database Actions companion
+    "oracle.ords-devtools",
+
+    // Draw.io diagram viewer (for architecture diagram)
+    "hediet.vscode-drawio",
+
+    // YAML/JSON schema support for MCP config
+    "redhat.vscode-yaml",
+
+    // Optional: REST Client for testing ORDS/SODA endpoints
+    "humao.rest-client"
+  ]
+}

@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Oracle 26ai – Fleet Spatial VRP Optimization Demo</title>
+
+<!-- Reveal.js CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css"/>
+<!-- highlight.js for code -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css"/>
+
+<style>
+  /* ── Oracle brand palette ─────────────────────────────────────── */
+  :root {
+    --oracle-red    : #C74634;
+    --oracle-dark   : #1a1a2e;
+    --oracle-blue   : #0f3460;
+    --oracle-mid    : #16213e;
+    --oracle-gold   : #e8a838;
+    --oracle-green  : #2ecc71;
+    --oracle-teal   : #00b4d8;
+    --oracle-light  : #e0e0e0;
+    --bg-card       : rgba(255,255,255,0.06);
+    --border-card   : rgba(255,255,255,0.12);
+  }
+
+  .reveal-viewport { background: var(--oracle-dark); }
+
+  .reveal {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 36px;
+    color: #f0f0f0;
+  }
+
+  /* Slide backgrounds */
+  .reveal .slides section {
+    text-align: left;
+    padding: 0 40px;
+  }
+
+  /* ── Headings ──────────────────────────────────────────────────── */
+  .reveal h1 { font-size: 1.8em; color: #fff; text-transform: none; letter-spacing: -1px; }
+  .reveal h2 { font-size: 1.3em; color: var(--oracle-gold); text-transform: none; letter-spacing: 0; margin-bottom: 0.4em; }
+  .reveal h3 { font-size: 0.9em; color: var(--oracle-teal); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.6em; }
+
+  /* ── Oracle logo badge ─────────────────────────────────────────── */
+  .oracle-badge {
+    display: inline-block;
+    background: var(--oracle-red);
+    color: #fff;
+    font-size: 0.45em;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 4px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.5em;
+    vertical-align: middle;
+  }
+
+  .feature-badge {
+    display: inline-block;
+    background: var(--oracle-blue);
+    border: 1px solid var(--oracle-teal);
+    color: var(--oracle-teal);
+    font-size: 0.38em;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  /* ── Layout helpers ────────────────────────────────────────────── */
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
+  .cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .cols5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; }
+
+  /* ── Cards ─────────────────────────────────────────────────────── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
+    padding: 18px 22px;
+    font-size: 0.55em;
+  }
+  .card.red    { border-left: 4px solid var(--oracle-red); }
+  .card.gold   { border-left: 4px solid var(--oracle-gold); }
+  .card.teal   { border-left: 4px solid var(--oracle-teal); }
+  .card.green  { border-left: 4px solid var(--oracle-green); }
+  .card.purple { border-left: 4px solid #9b59b6; }
+
+  .card h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.1em;
+    color: var(--oracle-gold);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .card p, .card li { margin: 4px 0; color: #ccc; }
+  .card ul { padding-left: 16px; }
+
+  /* ── Big stat numbers ───────────────────────────────────────────── */
+  .stat-box {
+    text-align: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
+    padding: 16px 10px;
+  }
+  .stat-box .num   { font-size: 2.2em; font-weight: 700; line-height: 1; }
+  .stat-box .label { font-size: 0.42em; color: #aaa; margin-top: 4px; }
+  .stat-box.red   .num { color: var(--oracle-red); }
+  .stat-box.gold  .num { color: var(--oracle-gold); }
+  .stat-box.green .num { color: var(--oracle-green); }
+  .stat-box.teal  .num { color: var(--oracle-teal); }
+
+  /* ── Code blocks ────────────────────────────────────────────────── */
+  .reveal pre {
+    font-size: 0.44em;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    margin: 0;
+    width: 100%;
+  }
+  .reveal pre code {
+    max-height: 380px;
+    padding: 18px 20px !important;
+    line-height: 1.5;
+  }
+
+  /* ── Table ──────────────────────────────────────────────────────── */
+  .reveal table {
+    font-size: 0.5em;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .reveal table th {
+    background: var(--oracle-blue);
+    color: var(--oracle-gold);
+    padding: 10px 14px;
+    text-align: left;
+    border: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 0.9em;
+  }
+  .reveal table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    color: #ddd;
+  }
+  .reveal table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+  .tag-red    { color: var(--oracle-red);   font-weight: 600; }
+  .tag-green  { color: var(--oracle-green); font-weight: 600; }
+  .tag-gold   { color: var(--oracle-gold);  font-weight: 600; }
+  .tag-teal   { color: var(--oracle-teal);  font-weight: 600; }
+
+  /* ── Dividers / highlights ──────────────────────────────────────── */
+  .divider { width: 60px; height: 4px; background: var(--oracle-red); margin: 10px 0 20px 0; border-radius: 2px; }
+  .highlight { color: var(--oracle-gold); font-weight: 600; }
+  .red-text   { color: var(--oracle-red); }
+  .green-text { color: var(--oracle-green); font-weight: 700; }
+  .teal-text  { color: var(--oracle-teal); }
+  .small { font-size: 0.5em; color: #aaa; }
+
+  /* ── Step pill ──────────────────────────────────────────────────── */
+  .step-pill {
+    display: inline-block;
+    background: var(--oracle-red);
+    color: #fff;
+    font-size: 0.38em;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-right: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  /* ── Progress bar (slide number) ───────────────────────────────── */
+  .reveal .progress { color: var(--oracle-red); }
+
+  /* ── SVG Chicago map styles ─────────────────────────────────────── */
+  .chicago-map { width: 100%; max-width: 420px; }
+
+  /* ── Flow steps ─────────────────────────────────────────────────── */
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 10px 0;
+    font-size: 0.52em;
+    color: #ddd;
+  }
+  .flow-num {
+    width: 32px; height: 32px;
+    background: var(--oracle-red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1em;
+    flex-shrink: 0;
+  }
+  .flow-arrow { color: var(--oracle-gold); font-size: 1.2em; }
+
+  /* ── Before/After comparison bar ───────────────────────────────── */
+  .bar-wrap { margin: 8px 0; font-size: 0.48em; }
+  .bar-label { color: #bbb; margin-bottom: 3px; }
+  .bar-track { background: rgba(255,255,255,0.08); border-radius: 4px; height: 26px; position: relative; overflow: hidden; }
+  .bar-fill   { height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; font-weight: 600; font-size: 0.9em; transition: width 1s ease; }
+  .bar-before { background: linear-gradient(90deg,#b85450,#e74c3c); }
+  .bar-after  { background: linear-gradient(90deg,#27ae60,#2ecc71); }
+
+  /* ── Title slide special ────────────────────────────────────────── */
+  .title-eyebrow { font-size: 0.38em; color: var(--oracle-teal); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.4em; }
+  .title-sub     { font-size: 0.48em; color: #aaa; margin-top: 0.5em; max-width: 700px; }
+
+  /* ── Agenda items ───────────────────────────────────────────────── */
+  .agenda-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 16px; border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    margin: 8px 0;
+    font-size: 0.52em; color: #ddd;
+  }
+  .agenda-icon { font-size: 1.4em; width: 36px; text-align: center; }
+
+  /* ── Architecture lanes ─────────────────────────────────────────── */
+  .arch-lane {
+    border: 1px solid var(--border-card);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    font-size: 0.44em;
+  }
+  .arch-lane-title {
+    font-size: 0.75em; text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 10px; font-weight: 700;
+  }
+  .arch-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .arch-box {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px; padding: 6px 12px;
+    color: #ddd; font-size: 0.9em;
+  }
+
+  /* Slide-specific background gradients */
+  .slide-spatial   { background: linear-gradient(135deg,#0f2040 0%,#1a1a2e 100%) !important; }
+  .slide-vector    { background: linear-gradient(135deg,#0a2818 0%,#1a1a2e 100%) !important; }
+  .slide-json      { background: linear-gradient(135deg,#1a0f2e 0%,#1a1a2e 100%) !important; }
+  .slide-results   { background: linear-gradient(135deg,#0d1f0d 0%,#1a1a2e 100%) !important; }
+  .slide-agent     { background: linear-gradient(135deg,#1a0d0d 0%,#1a1a2e 100%) !important; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 1 – TITLE
+═══════════════════════════════════════════════════════════════════ -->
+<section data-background="linear-gradient(135deg,#0d0d1a 0%,#1a1a2e 60%,#0f2040 100%)">
+  <div style="padding-top:30px;">
+    <div class="title-eyebrow">Oracle 26ai · Autonomous Data Warehouse</div>
+    <span class="oracle-badge">Oracle 26ai</span>
+    <h1 style="margin-top:16px;line-height:1.15;">
+      Fleet Spatial<br/>VRP Optimization
+    </h1>
+    <div class="divider"></div>
+    <p class="title-sub">
+      Demonstrating real-world <span class="highlight">Vehicle Routing Problem</span> optimization
+      using Oracle Spatial, AI Vector Search, JSON Duality, and live telemetry —
+      powered by <span class="highlight">PL/SQL</span> on ADW and queryable via
+      <span class="highlight">SQLcl + Claude MCP Agent</span>.
+    </p>
+    <div style="margin-top:40px;display:flex;gap:16px;flex-wrap:wrap;">
+      <span class="feature-badge">Oracle Spatial</span>
+      <span class="feature-badge">AI Vector Search</span>
+      <span class="feature-badge">JSON Duality</span>
+      <span class="feature-badge">Partitioning</span>
+      <span class="feature-badge">PL/SQL VRP</span>
+      <span class="feature-badge">MCP Agent</span>
+    </div>
+    <p style="margin-top:50px;font-size:0.38em;color:#555;">
+      Chicago Metro Fleet · 50 customers · 15 vehicles · 75 orders/day
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 2 – AGENDA
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>What we'll cover</h3>
+  <h2>Demo Agenda</h2>
+  <div class="divider"></div>
+  <div class="cols2" style="margin-top:10px;">
+    <div>
+      <div class="agenda-item"><div class="agenda-icon">🚚</div><div><strong>The Problem</strong> — Vehicle Routing Problem (VRP) explained</div></div>
+      <div class="agenda-item"><div class="agenda-icon">📦</div><div><strong>The Dataset</strong> — Chicago metro fleet, real coordinates</div></div>
+      <div class="agenda-item"><div class="agenda-icon">🗺️</div><div><strong>Oracle Spatial</strong> — SDO_GEOMETRY, indexes, spatial queries</div></div>
+      <div class="agenda-item"><div class="agenda-icon">🧠</div><div><strong>AI Vector Search</strong> — VECTOR type, HNSW, similarity search</div></div>
+      <div class="agenda-item"><div class="agenda-icon">📄</div><div><strong>JSON &amp; Duality</strong> — Native JSON + Relational Duality Views</div></div>
+    </div>
+    <div>
+      <div class="agenda-item"><div class="agenda-icon">⚡</div><div><strong>Partitioning</strong> — Telemetry range partitions</div></div>
+      <div class="agenda-item"><div class="agenda-icon">💻</div><div><strong>PL/SQL</strong> — VRP heuristic algorithm</div></div>
+      <div class="agenda-item"><div class="agenda-icon">📊</div><div><strong>Before vs After</strong> — Visual results</div></div>
+      <div class="agenda-item"><div class="agenda-icon">💰</div><div><strong>Business Case</strong> — ~$199k / year ROI</div></div>
+      <div class="agenda-item"><div class="agenda-icon">🤖</div><div><strong>MCP Agent</strong> — Claude + SQLcl as live agent</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 3 – THE PROBLEM
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Context</h3>
+  <h2>The Vehicle Routing Problem (VRP)</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.55em;color:#ccc;margin-top:0;">
+        Every morning, a dispatcher must answer:<br/>
+        <span class="highlight">"Which driver visits which customers, in what order?"</span>
+      </p>
+      <div class="card red" style="margin:14px 0;">
+        <h4>The naive approach</h4>
+        <ul>
+          <li>Assign orders sequentially as they arrive</li>
+          <li>No geographic clustering</li>
+          <li>Ignore time windows &amp; capacity</li>
+          <li>Result: trucks <strong style="color:#e74c3c;">criss-cross the city</strong></li>
+        </ul>
+      </div>
+      <div class="card green">
+        <h4>The optimised approach</h4>
+        <ul>
+          <li>Cluster stops spatially by depot</li>
+          <li>Nearest-neighbour with time-window feasibility</li>
+          <li>Respect payload capacity</li>
+          <li>Result: <strong style="color:#2ecc71;">tight geographic loops</strong></li>
+        </ul>
+      </div>
+    </div>
+    <!-- SVG: two route diagrams -->
+    <div style="display:flex;flex-direction:column;gap:14px;align-items:center;">
+      <svg viewBox="0 0 260 230" class="chicago-map" style="max-width:360px;">
+        <!-- Background -->
+        <rect width="260" height="230" fill="#0d1829" rx="8"/>
+        <text x="130" y="20" text-anchor="middle" fill="#e74c3c" font-size="11" font-weight="bold">BASELINE — naive routes</text>
+        <!-- Grid lines representing Chicago streets -->
+        <line x1="0" y1="115" x2="260" y2="115" stroke="#1e3a5f" stroke-width="0.5"/>
+        <line x1="130" y1="0"  x2="130" y2="230" stroke="#1e3a5f" stroke-width="0.5"/>
+        <!-- Depots -->
+        <circle cx="60"  cy="55"  r="9" fill="#C74634" opacity="0.9"/>
+        <circle cx="160" cy="120" r="9" fill="#C74634" opacity="0.9"/>
+        <circle cx="80"  cy="140" r="9" fill="#C74634" opacity="0.9"/>
+        <text x="60"  y="57" text-anchor="middle" fill="white" font-size="8" font-weight="bold">D</text>
+        <text x="160" y="122" text-anchor="middle" fill="white" font-size="8" font-weight="bold">D</text>
+        <text x="80"  y="142" text-anchor="middle" fill="white" font-size="8" font-weight="bold">D</text>
+        <!-- Naive route lines – chaotic, criss-crossing -->
+        <polyline points="60,55 200,80 40,160 180,170 70,200 150,90 100,180 220,60 60,55"
+          fill="none" stroke="#e74c3c" stroke-width="1.5" opacity="0.8"/>
+        <polyline points="160,120 30,80 210,170 50,130 190,50 220,180 130,200 160,120"
+          fill="none" stroke="#f39c12" stroke-width="1.5" opacity="0.8"/>
+        <!-- Customer dots -->
+        <circle cx="200" cy="80"  r="5" fill="#ffd700"/>
+        <circle cx="40"  cy="160" r="5" fill="#ffd700"/>
+        <circle cx="180" cy="170" r="5" fill="#ffd700"/>
+        <circle cx="70"  cy="200" r="5" fill="#ffd700"/>
+        <circle cx="150" cy="90"  r="5" fill="#ffd700"/>
+        <circle cx="100" cy="180" r="5" fill="#ffd700"/>
+        <circle cx="220" cy="60"  r="5" fill="#ffd700"/>
+        <circle cx="30"  cy="80"  r="5" fill="#ffd700"/>
+        <circle cx="210" cy="170" r="5" fill="#ffd700"/>
+        <circle cx="50"  cy="130" r="5" fill="#ffd700"/>
+        <circle cx="190" cy="50"  r="5" fill="#ffd700"/>
+        <circle cx="220" cy="180" r="5" fill="#ffd700"/>
+        <circle cx="130" cy="200" r="5" fill="#ffd700"/>
+        <!-- Legend -->
+        <circle cx="20" cy="215" r="5" fill="#C74634"/>
+        <text x="30" y="219" fill="#aaa" font-size="9">Depot</text>
+        <circle cx="75" cy="215" r="5" fill="#ffd700"/>
+        <text x="85" y="219" fill="#aaa" font-size="9">Customer</text>
+        <text x="180" y="219" fill="#e74c3c" font-size="9" font-weight="bold">~855 km</text>
+      </svg>
+
+      <svg viewBox="0 0 260 230" class="chicago-map" style="max-width:360px;">
+        <rect width="260" height="230" fill="#0d1829" rx="8"/>
+        <text x="130" y="20" text-anchor="middle" fill="#2ecc71" font-size="11" font-weight="bold">OPTIMISED — spatial clusters</text>
+        <line x1="0" y1="115" x2="260" y2="115" stroke="#1e3a5f" stroke-width="0.5"/>
+        <line x1="130" y1="0"  x2="130" y2="230" stroke="#1e3a5f" stroke-width="0.5"/>
+        <circle cx="60"  cy="55"  r="9" fill="#C74634" opacity="0.9"/>
+        <circle cx="160" cy="120" r="9" fill="#C74634" opacity="0.9"/>
+        <circle cx="80"  cy="140" r="9" fill="#C74634" opacity="0.9"/>
+        <text x="60"  y="57" text-anchor="middle" fill="white" font-size="8" font-weight="bold">D</text>
+        <text x="160" y="122" text-anchor="middle" fill="white" font-size="8" font-weight="bold">D</text>
+        <text x="80"  y="142" text-anchor="middle" fill="white" font-size="8" font-weight="bold">D</text>
+        <!-- Optimised tight loops -->
+        <polyline points="60,55 30,80 50,130 40,160 70,200 100,180 80,140 60,55"
+          fill="none" stroke="#2ecc71" stroke-width="1.5" opacity="0.85"/>
+        <polyline points="160,120 190,50 220,60 200,80 150,90 130,200 210,170 180,170 160,120"
+          fill="none" stroke="#00b4d8" stroke-width="1.5" opacity="0.85"/>
+        <polyline points="80,140 220,180 80,140"
+          fill="none" stroke="#9b59b6" stroke-width="1.5" opacity="0.85"/>
+        <!-- Customers (same positions) -->
+        <circle cx="200" cy="80"  r="5" fill="#ffd700"/>
+        <circle cx="40"  cy="160" r="5" fill="#ffd700"/>
+        <circle cx="180" cy="170" r="5" fill="#ffd700"/>
+        <circle cx="70"  cy="200" r="5" fill="#ffd700"/>
+        <circle cx="150" cy="90"  r="5" fill="#ffd700"/>
+        <circle cx="100" cy="180" r="5" fill="#ffd700"/>
+        <circle cx="220" cy="60"  r="5" fill="#ffd700"/>
+        <circle cx="30"  cy="80"  r="5" fill="#ffd700"/>
+        <circle cx="210" cy="170" r="5" fill="#ffd700"/>
+        <circle cx="50"  cy="130" r="5" fill="#ffd700"/>
+        <circle cx="190" cy="50"  r="5" fill="#ffd700"/>
+        <circle cx="220" cy="180" r="5" fill="#ffd700"/>
+        <circle cx="130" cy="200" r="5" fill="#ffd700"/>
+        <text x="180" y="219" fill="#2ecc71" font-size="9" font-weight="bold">~575 km ✓</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 4 – THE DATASET
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Demo data</h3>
+  <h2>Chicago Metro Delivery Fleet</h2>
+  <div class="divider"></div>
+  <div class="cols5" style="margin:20px 0;">
+    <div class="stat-box teal"><div class="num">3</div><div class="label">Depots</div></div>
+    <div class="stat-box gold"><div class="num">15</div><div class="label">Vehicles</div></div>
+    <div class="stat-box teal"><div class="num">50</div><div class="label">Customers</div></div>
+    <div class="stat-box gold"><div class="num">75</div><div class="label">Orders/day</div></div>
+    <div class="stat-box green"><div class="num">5</div><div class="label">Traffic zones</div></div>
+  </div>
+  <div class="cols3" style="margin-top:10px;">
+    <div class="card teal">
+      <h4>3 Depots</h4>
+      <ul>
+        <li>O'Hare NW (industrial)</li>
+        <li>McCormick Central (commercial)</li>
+        <li>Cicero West (heavy freight)</li>
+      </ul>
+    </div>
+    <div class="card gold">
+      <h4>15 Vehicles</h4>
+      <ul>
+        <li>4 Heavy Trucks (diesel)</li>
+        <li>3 Box Trucks (diesel)</li>
+        <li>4 Electric Vans (zero CO₂)</li>
+        <li>3 Hybrid Vans</li>
+        <li>1 Standard Van</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h4>75 Orders</h4>
+      <ul>
+        <li>10 × Priority 1 URGENT</li>
+        <li>25 × Priority 2 HIGH</li>
+        <li>40 × Priority 3 NORMAL</li>
+        <li>Weight 80–1,650 kg</li>
+        <li>All with time windows</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small" style="margin-top:16px;">All coordinates are real WGS84 locations in the Chicago metropolitan area · SRID 4326</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 5 – FEATURE 1: ORACLE SPATIAL – INTRO
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-spatial">
+  <h3>Oracle 26ai Feature 1</h3>
+  <h2>Oracle Spatial<span class="feature-badge">SDO_GEOMETRY</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;">
+        Oracle Spatial is a native first-class feature of the database engine —
+        not an add-on. Every spatial table column stores geometry alongside
+        relational data, indexed and queryable with SQL.
+      </p>
+      <div class="card teal" style="margin:12px 0;">
+        <h4>Geometry types used</h4>
+        <ul>
+          <li><strong>2001</strong> — Point (depot, customer, vehicle GPS)</li>
+          <li><strong>2002</strong> — LineString (route path)</li>
+          <li><strong>2003</strong> — Polygon (traffic congestion zones)</li>
+        </ul>
+      </div>
+      <div class="card gold">
+        <h4>SRID 4326 (WGS84)</h4>
+        <ul>
+          <li>World Geodetic System 1984</li>
+          <li>Same as GPS / Google Maps</li>
+          <li>LON first, LAT second in SDO</li>
+        </ul>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── Point: depot location ────────────────────
+CREATE TABLE fleet_depots (
+  depot_id  NUMBER PRIMARY KEY,
+  depot_name VARCHAR2(100),
+  location  SDO_GEOMETRY   -- ← native spatial column
+);
+
+-- Insert a real Chicago coordinate
+INSERT INTO fleet_depots VALUES (
+  1,
+  'O''Hare Logistics Hub',
+  SDO_GEOMETRY(
+    2001,                      -- geometry type: POINT
+    4326,                      -- SRID: WGS84
+    SDO_POINT_TYPE(
+      -87.9073,                -- longitude
+       41.9742,                -- latitude
+      NULL
+    ),
+    NULL, NULL
+  )
+);
+
+-- ── Polygon: traffic zone ────────────────────
+-- SDO_GEOMETRY(2003, 4326, NULL,
+--   SDO_ELEM_INFO_ARRAY(1,1003,1),
+--   SDO_ORDINATE_ARRAY(lon1,lat1, lon2,lat2,...)
+-- )</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 6 – FEATURE 1: SPATIAL INDEXES
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-spatial">
+  <h3>Oracle Spatial · Indexing</h3>
+  <h2>SPATIAL_INDEX_V2<span class="feature-badge">R-Tree</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Spatial indexes use an <span class="highlight">R-Tree structure</span> to
+        partition space into bounding boxes — enabling sub-millisecond proximity
+        queries across millions of GPS points.
+      </p>
+      <div style="margin:16px 0;">
+        <div class="flow-step"><div class="flow-num">1</div>Register geometry metadata with bounding box + tolerance</div>
+        <div class="flow-step"><div class="flow-num">2</div>Create <code>SPATIAL_INDEX_V2</code> with layer geometry type</div>
+        <div class="flow-step"><div class="flow-num">3</div>Oracle builds R-Tree over coordinate space</div>
+        <div class="flow-step"><div class="flow-num">4</div>All spatial operators automatically use the index</div>
+      </div>
+      <div class="card red">
+        <h4>8 spatial indexes in this demo</h4>
+        <p>Depots · Vehicles · Customers · Route paths (×2) · Stops · Telemetry · Traffic zones</p>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- Step 1: Register spatial metadata
+--   (defines bounding box for Chicago metro)
+INSERT INTO user_sdo_geom_metadata VALUES (
+  'FLEET_CUSTOMERS',    -- table
+  'LOCATION',           -- column
+  SDO_DIM_ARRAY(
+    SDO_DIM_ELEMENT('LON',-88.50,-87.30,0.005),
+    SDO_DIM_ELEMENT('LAT', 41.60, 42.20,0.005)
+  ),
+  4326                  -- SRID
+);
+
+-- Step 2: Create spatial index
+CREATE INDEX idx_fleet_customers_loc
+  ON fleet_customers(location)
+  INDEXTYPE IS MDSYS.SPATIAL_INDEX_V2
+  PARAMETERS ('layer_gtype=POINT');
+
+-- Step 3: Also create VECTOR index for AI
+CREATE VECTOR INDEX idx_fleet_ro_vector
+  ON fleet_routes_optimized(route_vector)
+  ORGANIZATION INMEMORY NEIGHBOR GRAPH
+  DISTANCE COSINE
+  WITH TARGET ACCURACY 95;
+-- ↑ Oracle 26ai HNSW approximate nearest-neighbour</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 7 – FEATURE 1: SPATIAL QUERIES
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-spatial">
+  <h3>Oracle Spatial · Queries</h3>
+  <h2>SDO_NN &amp; SDO_WITHIN_DISTANCE</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <pre style="font-size:0.8em;"><code class="language-sql">-- ── Q1: Nearest depot to each customer ────────
+-- SDO_NN = Spatial Nearest Neighbour
+-- Uses R-Tree index automatically
+SELECT c.customer_name,
+       d.depot_name,
+       ROUND(SDO_GEOM.SDO_DISTANCE(
+           c.location, d.location,
+           0.005, 'unit=KM'
+       ), 2)  AS dist_km
+FROM   fleet_customers c,
+       fleet_depots    d
+WHERE  SDO_NN(
+           d.location,      -- geometry to search
+           c.location,      -- reference point
+           'sdo_num_res=1', -- return 1 nearest
+           1
+       ) = 'TRUE'
+ORDER  BY c.customer_id;
+
+-- ── Q2: All customers within 5 km of O'Hare ──
+SELECT c.customer_name, c.neighborhood
+FROM   fleet_customers c
+WHERE  SDO_WITHIN_DISTANCE(
+           c.location,
+           (SELECT location FROM fleet_depots
+            WHERE depot_name LIKE '%O''Hare%'),
+           'distance=5 unit=KM'
+       ) = 'TRUE';
+
+-- ── Q3: Vehicles inside CBD traffic zone ──────
+SELECT v.vehicle_code, t.speed_kmh
+FROM   fleet_vehicles v
+JOIN   vw_vehicle_locations t USING(vehicle_id)
+JOIN   fleet_traffic_zones  tz ON tz.zone_type='CBD'
+WHERE  SDO_INSIDE(
+           t.current_location,
+           tz.zone_boundary        -- polygon
+       ) = 'TRUE';</code></pre>
+    <div>
+      <div class="card teal" style="margin-bottom:14px;">
+        <h4>SDO_NN — Nearest Neighbour</h4>
+        <p>Returns the N closest geometries. Used in the VRP engine to find the nearest unvisited customer at each step.</p>
+      </div>
+      <div class="card gold" style="margin-bottom:14px;">
+        <h4>SDO_WITHIN_DISTANCE</h4>
+        <p>Returns all geometries within a radius. Used to check if a delivery stop falls inside a congestion zone.</p>
+      </div>
+      <div class="card green">
+        <h4>SDO_INSIDE / SDO_GEOM</h4>
+        <p>Point-in-polygon (traffic zone containment). <code>SDO_GEOM.SDO_DISTANCE</code> returns exact km between any two geometries.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 8 – FEATURE 2: AI VECTOR SEARCH – INTRO
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-vector">
+  <h3>Oracle 26ai Feature 2</h3>
+  <h2>AI Vector Search<span class="feature-badge">VECTOR type</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Oracle 26ai introduces a native <span class="highlight">VECTOR data type</span> — enabling
+        AI similarity search directly inside the relational database. No separate vector
+        database needed.
+      </p>
+      <div class="card green" style="margin:14px 0;">
+        <h4>What we store</h4>
+        <p>Each optimised route gets a <strong>128-dimensional floating-point embedding</strong> — a mathematical fingerprint encoding:</p>
+        <ul>
+          <li>Route centroid (geographic centre)</li>
+          <li>Geographic spread of stops</li>
+          <li>Total distance &amp; stop count</li>
+          <li>Depot assignment</li>
+          <li>Harmonic spatial features</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <h4>What it enables</h4>
+        <p>"Find me routes similar to <em>this one</em> from last month"<br/>
+        — answered in milliseconds via cosine similarity on HNSW index</p>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── VECTOR column definition ──────────────────
+CREATE TABLE fleet_routes_optimized (
+  route_id   NUMBER PRIMARY KEY,
+  vehicle_id NUMBER,
+  ...
+  -- Oracle 26ai: 128-dim float32 vector
+  route_vector  VECTOR(128, FLOAT32)
+);
+
+-- ── Build HNSW vector index ───────────────────
+-- HNSW = Hierarchical Navigable Small World
+-- Approximate nearest-neighbour, very fast
+CREATE VECTOR INDEX idx_fleet_ro_vector
+  ON fleet_routes_optimized(route_vector)
+  ORGANIZATION INMEMORY NEIGHBOR GRAPH
+  DISTANCE COSINE
+  WITH TARGET ACCURACY 95;
+
+-- ── Store a vector (from PL/SQL) ──────────────
+UPDATE fleet_routes_optimized
+SET    route_vector = TO_VECTOR(
+         sys.ODCINumberList(
+           -0.071,  0.032,  0.184,  -- dims 1-3
+           ...                      -- dims 4-128
+         ),
+         128, FLOAT32
+       )
+WHERE  route_id = :id;
+
+-- ── Query: find 5 most similar routes ────────
+SELECT route_id, VECTOR_DISTANCE(
+         route_vector, :query_vec, COSINE
+       ) AS similarity
+FROM   fleet_routes_optimized
+ORDER  BY similarity
+FETCH  FIRST 5 ROWS ONLY;</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 9 – FEATURE 2: VECTOR SEARCH DEMO QUERY
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-vector">
+  <h3>AI Vector Search · In Action</h3>
+  <h2>"Find routes like this one"</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Demo Query 6 in <code>06_spatial_analysis.sql</code> — finds the 5 optimised routes most
+        similar to route #1 using <span class="highlight">cosine distance on HNSW</span>.
+      </p>
+      <div style="margin:16px 0;font-size:0.5em;color:#ccc;">
+        <strong style="color:#2ecc71;">Why this matters for fleet operations:</strong>
+        <ul style="margin-top:8px;line-height:1.8;">
+          <li>Identify routes with similar characteristics for <strong>driver assignment</strong></li>
+          <li>Find historical routes that closely match today's orders → reuse past optimisations</li>
+          <li>Detect <strong>anomalous routes</strong> that deviate from normal patterns</li>
+          <li>Group routes for <strong>training feedback loops</strong> in ML models</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <h4>HNSW vs Exact Search</h4>
+        <table style="font-size:0.9em;">
+          <tr><th>Method</th><th>Speed</th><th>Accuracy</th></tr>
+          <tr><td>Exact (brute force)</td><td>O(n)</td><td>100%</td></tr>
+          <tr><td>HNSW Index</td><td class="tag-green">O(log n)</td><td class="tag-green">≥95%</td></tr>
+        </table>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── Oracle 26ai: VECTOR similarity search ────
+-- Find 5 routes most similar to route #1
+-- HNSW index makes this sub-millisecond
+
+SELECT
+    route_id,
+    vehicle_id,
+    num_stops,
+    ROUND(total_distance_km, 1)   AS dist_km,
+    ROUND(savings_pct, 1)         AS saved_pct,
+    -- Similarity score: 1.0 = identical, 0 = unrelated
+    ROUND(
+      1 - VECTOR_DISTANCE(
+            route_vector,
+            (SELECT route_vector
+             FROM   fleet_routes_optimized
+             WHERE  route_id = 1),  -- reference route
+            COSINE
+          ),
+      3)  AS similarity_score
+FROM   fleet_routes_optimized
+WHERE  route_vector IS NOT NULL
+ORDER  BY similarity_score DESC
+FETCH  FIRST 5 ROWS ONLY;
+
+-- Example output:
+-- ROUTE_ID | DIST_KM | SAVED_PCT | SIMILARITY
+-- ─────────────────────────────────────────────
+--        1 |    47.3 |      34.2 |      1.000  ← self
+--        4 |    43.8 |      31.7 |      0.982
+--        7 |    51.2 |      29.4 |      0.967
+--        2 |    39.1 |      35.8 |      0.941
+--       11 |    44.7 |      33.1 |      0.928</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 10 – FEATURE 3: JSON
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-json">
+  <h3>Oracle 26ai Feature 3</h3>
+  <h2>Native JSON Columns<span class="feature-badge">JSON type</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Oracle 26ai stores JSON as a native binary type — not VARCHAR2.
+        It's schema-flexible, indexable, and queryable with SQL/JSON operators.
+      </p>
+      <div class="card purple" style="margin:14px 0;">
+        <h4>Where we use JSON</h4>
+        <ul>
+          <li><strong>fleet_depots.depot_meta</strong> — dock config, cold storage</li>
+          <li><strong>fleet_vehicles.vehicle_meta</strong> — VIN, make, model, year</li>
+          <li><strong>fleet_orders.order_meta</strong> — custom delivery attributes</li>
+          <li><strong>fleet_routes_*.route_meta</strong> — algorithm metadata</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <h4>Why JSON alongside relational?</h4>
+        <ul>
+          <li>Schema-flexible metadata — varies per vehicle/order type</li>
+          <li>App-specific fields without ALTER TABLE</li>
+          <li>Best of both worlds: relational joins + document flexibility</li>
+        </ul>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── JSON column in table definition ──────────
+CREATE TABLE fleet_vehicles (
+  vehicle_id    NUMBER PRIMARY KEY,
+  vehicle_code  VARCHAR2(20),
+  fuel_type     VARCHAR2(20),       -- relational
+  vehicle_meta  JSON                -- flexible JSON
+);
+
+-- ── Insert with JSON literal ──────────────────
+INSERT INTO fleet_vehicles VALUES (
+  1, 'OHR-HT-01', 'DIESEL',
+  JSON('{"year":2023,
+         "make":"Volvo",
+         "model":"FH16",
+         "vin":"YV2R4X2A3NB123401"}')
+);
+
+-- ── Query with JSON_VALUE ─────────────────────
+SELECT vehicle_code,
+       JSON_VALUE(vehicle_meta,'$.make')   AS make,
+       JSON_VALUE(vehicle_meta,'$.year'
+                  RETURNING NUMBER)        AS year,
+       JSON_VALUE(vehicle_meta,'$.vin')    AS vin
+FROM   fleet_vehicles
+WHERE  JSON_VALUE(vehicle_meta,'$.make') = 'Volvo';
+
+-- ── Query route algorithm metadata ───────────
+SELECT route_id,
+       JSON_VALUE(route_meta,'$.algorithm') AS algo,
+       JSON_VALUE(route_meta,'$.optimized'
+                  RETURNING VARCHAR2)       AS is_opt
+FROM   fleet_routes_optimized;</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 11 – FEATURE 3: JSON DUALITY VIEW
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-json">
+  <h3>Oracle 26ai Feature 3b</h3>
+  <h2>JSON Relational Duality Views<span class="feature-badge">Oracle 26ai</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        A <span class="highlight">Duality View</span> exposes relational tables as
+        JSON documents — giving apps a document API while the database stores
+        and enforces relational constraints underneath.
+        <strong>No duplication. No sync lag.</strong>
+      </p>
+      <div class="card purple" style="margin:14px 0;">
+        <h4>orders_duality</h4>
+        <p>Joins <code>fleet_orders</code>, <code>fleet_customers</code>, and <code>fleet_depots</code> into a single order document with full INSERT / UPDATE / DELETE support.</p>
+      </div>
+      <div class="card green">
+        <h4>Use cases</h4>
+        <ul>
+          <li>Mobile dispatch app reads orders as JSON</li>
+          <li>REST API via ORDS / Database Actions</li>
+          <li>Claude MCP agent queries as documents</li>
+          <li>Relational consistency maintained automatically</li>
+        </ul>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── JSON Relational Duality View ─────────────
+CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW
+  orders_duality AS
+SELECT JSON {
+  '_id'          : o.order_id,
+  'orderRef'     : o.order_ref,
+  'deliveryDate' : o.delivery_date,
+  'status'       : o.status,
+  'priority'     : o.priority,
+  'payload'      : {
+      'weightKg' : o.weight_kg,
+      'volumeM3' : o.volume_m3
+  },
+  'customer'     : {
+      'id'           : c.customer_id,
+      'name'         : c.customer_name,
+      'neighborhood' : c.neighborhood
+  },
+  'depot'        : {
+      'id'   : d.depot_id,
+      'name' : d.depot_name
+  }
+}
+FROM  fleet_orders    o
+JOIN  fleet_customers c ON c.customer_id = o.customer_id
+JOIN  fleet_depots    d ON d.depot_id    = o.depot_id
+WITH INSERT UPDATE DELETE;  -- ← full read-write!
+
+-- ── Query like a document store ───────────────
+SELECT od.data
+FROM   orders_duality od
+WHERE  JSON_VALUE(od.data,'$.status')   = 'ASSIGNED'
+AND    JSON_VALUE(od.data,'$.priority') = '1';</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 12 – FEATURE 4: PARTITIONING
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Oracle 26ai Feature 4</h3>
+  <h2>Range Partitioning<span class="feature-badge">Telemetry</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Fleet telemetry is a <span class="highlight">high-volume time-series</span> workload —
+        potentially millions of GPS pings per day. Range partitioning on
+        <code>recorded_at</code> lets Oracle prune old partitions from queries automatically.
+      </p>
+      <div class="card gold" style="margin:14px 0;">
+        <h4>Query performance impact</h4>
+        <p>A query for "today's pings" scans <strong style="color:#2ecc71;">1 partition</strong> instead of the full table.<br/>
+        With 2 years of history, that's a <strong style="color:#2ecc71;">8× speedup</strong>.</p>
+      </div>
+      <div class="card teal">
+        <h4>Partitions defined</h4>
+        <ul>
+          <li>telem_2025_q1 &nbsp;— Jan–Mar 2025</li>
+          <li>telem_2025_q2 &nbsp;— Apr–Jun 2025</li>
+          <li>telem_2025_q3 &nbsp;— Jul–Sep 2025</li>
+          <li>telem_2025_q4 &nbsp;— Oct–Dec 2025</li>
+          <li>telem_2026_q1 &nbsp;— Jan–Mar 2026</li>
+          <li>telem_future  &nbsp;— MAXVALUE catch-all</li>
+        </ul>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── Partitioned telemetry table ──────────────
+CREATE TABLE fleet_telemetry (
+  telemetry_id   NUMBER PRIMARY KEY,
+  vehicle_id     NUMBER NOT NULL,
+  recorded_at    TIMESTAMP DEFAULT SYSTIMESTAMP,
+  location       SDO_GEOMETRY NOT NULL,  -- GPS point
+  speed_kmh      NUMBER(5,2),
+  heading_deg    NUMBER(5,2),
+  fuel_level_pct NUMBER(5,2),
+  engine_temp_c  NUMBER(5,2),
+  odometer_km    NUMBER(10,3),
+  status         VARCHAR2(30),  -- DRIVING|IDLE|DELIVERING
+  alert_code     VARCHAR2(10)   -- SPD|FUEL|TEMP|NULL
+)
+PARTITION BY RANGE (recorded_at) (
+  PARTITION telem_2025_q1
+    VALUES LESS THAN (TIMESTAMP '2025-04-01 00:00:00'),
+  PARTITION telem_2025_q2
+    VALUES LESS THAN (TIMESTAMP '2025-07-01 00:00:00'),
+  PARTITION telem_2025_q3
+    VALUES LESS THAN (TIMESTAMP '2025-10-01 00:00:00'),
+  PARTITION telem_2025_q4
+    VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'),
+  PARTITION telem_2026_q1
+    VALUES LESS THAN (TIMESTAMP '2026-04-01 00:00:00'),
+  PARTITION telem_future
+    VALUES LESS THAN (MAXVALUE)    -- catch-all
+);
+
+-- Oracle automatically routes INSERTs and prunes
+-- partition scans based on WHERE recorded_at = ...
+-- Spatial index works per-partition too.</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 13 – FEATURE 5: PL/SQL VRP
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Oracle 26ai Feature 5</h3>
+  <h2>PL/SQL — VRP Algorithm<span class="feature-badge">Server-side logic</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        The entire VRP solver runs <span class="highlight">inside the database</span> as PL/SQL —
+        no data movement, no middleware. Spatial distance calculations use the
+        <span class="highlight">Haversine formula</span> on longitude/latitude pairs.
+      </p>
+      <div class="card red" style="margin:12px 0;">
+        <h4>Algorithm: Nearest-Neighbour Heuristic</h4>
+        <ol style="padding-left:16px;color:#ccc;font-size:0.95em;line-height:1.8;">
+          <li>Sort orders by <strong>priority</strong> then <strong>time-window open</strong></li>
+          <li>Assign orders to their nearest depot spatially</li>
+          <li>For each vehicle: greedy loop — pick nearest feasible unvisited stop</li>
+          <li>Feasibility = within time-window AND within payload capacity</li>
+          <li>Priority boost: <code>score = distance / (4 − priority)</code></li>
+          <li>Return to depot, compute fuel cost &amp; CO₂</li>
+          <li>Store 128-dim VECTOR embedding for AI search</li>
+        </ol>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── Haversine distance (km) in PL/SQL ────────
+FUNCTION haversine(
+    lon1 NUMBER, lat1 NUMBER,
+    lon2 NUMBER, lat2 NUMBER
+) RETURN NUMBER IS
+  r  CONSTANT NUMBER := 6371; -- Earth radius km
+  dl  NUMBER := (lat2-lat1) * 3.14159/180;
+  dlo NUMBER := (lon2-lon1) * 3.14159/180;
+  a   NUMBER;
+BEGIN
+  a := SIN(dl/2)*SIN(dl/2)
+     + COS(lat1*3.14159/180)
+     * COS(lat2*3.14159/180)
+     * SIN(dlo/2)*SIN(dlo/2);
+  RETURN r * 2 * ATAN2(SQRT(a), SQRT(1-a));
+END;
+
+-- ── Nearest-feasible-neighbour loop ──────────
+LOOP
+  v_best_idx  := 0;
+  v_best_dist := 999999;
+
+  FOR oi IN 1..v_ord_cnt LOOP
+    IF NOT v_ord_served(oi)
+    AND (v_payload + v_weight(oi)) <= v_max_pay
+    AND arrival_minutes <= v_time_window_close(oi)
+    THEN
+      -- Priority-weighted score
+      v_score := haversine(cur_lon, cur_lat,
+                           ord_lon(oi), ord_lat(oi))
+                 / (4 - v_priority(oi));
+      IF v_score < v_best_dist THEN
+        v_best_dist := v_score;
+        v_best_idx  := oi;
+      END IF;
+    END IF;
+  END LOOP;
+  EXIT WHEN v_best_idx = 0;
+  -- commit to this stop, mark served ...
+END LOOP;</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 14 – DEMO FLOW OVERVIEW
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Running the demo</h3>
+  <h2>7-Step Demo Pipeline</h2>
+  <div class="divider"></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:10px;">
+    <div class="card teal">
+      <h4>① Schema</h4>
+      <p><code>01_create_schema.sql</code></p>
+      <p>9 tables · 3 views · 17 indexes</p>
+    </div>
+    <div class="card gold">
+      <h4>② Seed Data</h4>
+      <p><code>02_seed_data.sql</code></p>
+      <p>Depots · Vehicles · Customers · Orders · Traffic zones</p>
+    </div>
+    <div class="card red">
+      <h4>③ Baseline</h4>
+      <p><code>03_baseline_routes.sql</code></p>
+      <p>Naive round-robin · ~855 km · 15 vehicles</p>
+    </div>
+    <div class="card green">
+      <h4>④ Optimise</h4>
+      <p><code>04_vrp_optimize.sql</code></p>
+      <p>VRP nearest-neighbour · ~575 km · 12 vehicles</p>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px;">
+    <div class="card teal">
+      <h4>⑤ Telemetry</h4>
+      <p><code>05_telemetry_stream.sql</code></p>
+      <p>GPS ping every 5 min · Speed / fuel / alerts</p>
+    </div>
+    <div class="card purple">
+      <h4>⑥ Analysis</h4>
+      <p><code>06_spatial_analysis.sql</code></p>
+      <p>9 showcase queries · Spatial + Vector + JSON</p>
+    </div>
+    <div class="card gold">
+      <h4>⑦ Report</h4>
+      <p><code>07_report.sql</code></p>
+      <p>Before/after summary · Annualised ROI</p>
+    </div>
+  </div>
+  <div style="margin-top:20px;font-size:0.45em;color:#888;text-align:center;">
+    Run all steps at once:  <code style="color:#e8a838;">sql fleet_demo/password@yourdb_medium  @sql/00_master_run.sql</code>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 15 – STEP 3: BASELINE ROUTES
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Demo Step 3</h3>
+  <h2>Baseline Routes — The Problem State</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Script <code>03_baseline_routes.sql</code> simulates how deliveries look
+        <span class="red-text">before</span> any optimisation — orders assigned
+        sequentially by order_id, not geography.
+      </p>
+      <div class="card red" style="margin:12px 0;">
+        <h4>Naive algorithm</h4>
+        <ul>
+          <li>Sort all orders by <code>order_id</code> only</li>
+          <li>Distribute round-robin across 15 vehicles</li>
+          <li>No geographic clustering</li>
+          <li>No time-window checking</li>
+          <li>No capacity awareness</li>
+        </ul>
+      </div>
+      <div class="card gold">
+        <h4>Result</h4>
+        <ul>
+          <li>Routes criss-cross the city</li>
+          <li>Vehicles from NW depot serve South Side customers</li>
+          <li>All 15 vehicles dispatched</li>
+          <li><strong style="color:#e74c3c;">~855 km total · ~$2,420 fuel</strong></li>
+        </ul>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── Naive order assignment ────────────────────
+-- Orders sorted by order_id (arrival order)
+-- NO geographic awareness
+FOR r IN (
+  SELECT o.order_id,
+         c.location.sdo_point.x  clon,
+         c.location.sdo_point.y  clat
+  FROM   fleet_orders   o
+  JOIN   fleet_customers c ON ...
+  WHERE  o.delivery_date = c_demo_date
+  ORDER  BY o.order_id   -- ← NAIVE: no clustering
+) LOOP
+  -- Assign: vehicle 1 gets orders 1,16,31,46...
+  --         vehicle 2 gets orders 2,17,32,47...
+  --         etc. (round-robin)
+  IF MOD(o_idx-1, v_veh_cnt)+1 = v_idx THEN
+    -- compute haversine distance from prev stop
+    v_dist := haversine(prev_lon, prev_lat,
+                        cust_lon,  cust_lat)
+              * 1.35;  -- urban factor
+    -- insert stop record...
+  END IF;
+END LOOP;
+
+-- ── Typical baseline route output ────────────
+-- Route 1 (OHR-HT-01): 5 stops, 71.4 km, $27.13
+--   Stop 1: O'Hare → Woodlawn (38 km south)
+--   Stop 2: Woodlawn → Park Ridge (62 km north)
+--   Stop 3: Park Ridge → Hyde Park (55 km south)
+--   ← criss-crossing the entire city!</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 16 – STEP 4: VRP OPTIMISATION
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Demo Step 4</h3>
+  <h2>VRP Optimisation — The Solution</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Script <code>04_vrp_optimize.sql</code> — same data, completely different outcome.
+        The PL/SQL solver clusters stops geographically, respects time windows, and
+        only dispatches vehicles that are needed.
+      </p>
+      <div class="card green" style="margin:12px 0;">
+        <h4>Key improvements</h4>
+        <ul>
+          <li>Orders sorted: <strong>priority first, then time-window open</strong></li>
+          <li>Each order assigned to <strong>nearest depot</strong> spatially</li>
+          <li>Nearest-neighbour with <strong>priority weighting</strong></li>
+          <li>Time-window feasibility checked per step</li>
+          <li>Payload cap per vehicle enforced</li>
+          <li>VECTOR embedding stored for each completed route</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <h4>Result</h4>
+        <ul>
+          <li>Routes form tight geographic loops</li>
+          <li>3 vehicles <strong>not needed</strong> (freed for other tasks)</li>
+          <li><strong style="color:#2ecc71;">~575 km total · ~$1,625 fuel</strong></li>
+        </ul>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── Key difference: orders pre-sorted ────────
+FOR r IN (
+  SELECT o.order_id, ...
+  FROM   fleet_orders o
+  JOIN   fleet_customers c ON ...
+  WHERE  o.delivery_date = c_demo_date
+  ORDER  BY o.priority,          -- ← URGENT first
+            c.time_window_open,  -- ← early windows first
+            o.order_id
+) LOOP ...
+
+-- ── Nearest-feasible-neighbour selection ──────
+FOR oi IN 1..v_ord_cnt LOOP
+  IF NOT served(oi)
+  AND nearest_depot(oi) = this_depot
+  AND payload + weight(oi) <= max_payload
+  AND arrival_minutes    <= time_window_close(oi)
+  THEN
+    -- Priority-weighted score
+    v_score := haversine(cur_pos, stop_pos)
+               / (4 - priority(oi));
+    -- Lower score = pick this one next
+  END IF;
+END LOOP;
+
+-- ── After building route: store VECTOR ───────
+UPDATE fleet_routes_optimized
+SET    route_vector = make_route_vector(
+           centroid_lon, centroid_lat,
+           geographic_spread,
+           total_distance,
+           num_stops,
+           depot_id
+       )
+WHERE  route_id = v_route_id;</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 17 – STEP 5: REAL-TIME TELEMETRY
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Demo Step 5</h3>
+  <h2>Real-time Telemetry Stream</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        Script <code>05_telemetry_stream.sql</code> simulates a live GPS data feed —
+        vehicles reporting position, speed, heading, and fuel every
+        <span class="highlight">5 minutes</span> as they execute the optimised routes.
+      </p>
+      <div class="card teal" style="margin:12px 0;">
+        <h4>What each ping records</h4>
+        <ul>
+          <li><code>location</code> — SDO_GEOMETRY point (live GPS)</li>
+          <li><code>speed_kmh</code> — realistic: 10–65 km/h, 0 at stops</li>
+          <li><code>heading_deg</code> — compass bearing 0–360°</li>
+          <li><code>fuel_level_pct</code> — depletes along route</li>
+          <li><code>engine_temp_c</code> — with random variation</li>
+          <li><code>status</code> — DRIVING / IDLE / DELIVERING</li>
+          <li><code>alert_code</code> — FUEL / TEMP / SPD (threshold alerts)</li>
+        </ul>
+      </div>
+      <div class="card gold">
+        <h4>Stored in partitioned table</h4>
+        <p>All pings automatically route to the correct time partition. Spatial index enables instant "which vehicles are near X?" queries.</p>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── GPS ping interpolated along route ────────
+-- For each segment (stop A → stop B):
+--   emit one ping every 5 minutes
+
+WHILE elapsed_min < segment_min LOOP
+  v_t   := elapsed / total_seg_min;  -- 0.0 → 1.0
+  v_lon := lerp(lon_from, lon_to, v_t);
+  v_lat := lerp(lat_from, lat_to, v_t);
+
+  -- Realistic speed: slower near stops
+  IF v_t < 0.1 OR v_t > 0.9 THEN
+    v_speed := DBMS_RANDOM.VALUE(10, 25); -- near stop
+  ELSE
+    v_speed := DBMS_RANDOM.VALUE(35, 65); -- mid-segment
+  END IF;
+
+  -- Auto-generate alerts
+  v_alert := CASE
+    WHEN fuel_level < 15 THEN 'FUEL'
+    WHEN engine_temp > 95 THEN 'TEMP'
+    WHEN v_speed     > 90 THEN 'SPD'
+    ELSE NULL
+  END;
+
+  INSERT INTO fleet_telemetry (
+    vehicle_id, recorded_at,
+    location,                  -- SDO_GEOMETRY point
+    speed_kmh, heading_deg,
+    fuel_level_pct, engine_temp_c,
+    status, alert_code
+  ) VALUES (...);
+
+  elapsed := elapsed + 5;   -- next ping in 5 min
+END LOOP;</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 18 – THE RESULTS: BEFORE vs AFTER
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-results">
+  <h3>Results</h3>
+  <h2>Before vs After — VRP Optimisation</h2>
+  <div class="divider"></div>
+
+  <div class="cols2" style="margin-top:10px;">
+    <div>
+      <div class="bar-wrap">
+        <div class="bar-label">Total Distance (km)</div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:0.45em;">
+          <div style="width:200px;">
+            <div class="bar-label">Baseline</div>
+            <div class="bar-track"><div class="bar-fill bar-before" style="width:100%;">855 km</div></div>
+          </div>
+          <div style="width:200px;">
+            <div class="bar-label">Optimised</div>
+            <div class="bar-track"><div class="bar-fill bar-after" style="width:67%;">575 km</div></div>
+          </div>
+          <span class="green-text" style="font-size:1.3em;">−33%</span>
+        </div>
+      </div>
+
+      <div class="bar-wrap" style="margin-top:14px;">
+        <div style="display:flex;gap:8px;align-items:center;font-size:0.45em;">
+          <div style="width:200px;">
+            <div class="bar-label">Fuel Cost / day</div>
+            <div class="bar-track"><div class="bar-fill bar-before" style="width:100%;">$2,420</div></div>
+          </div>
+          <div style="width:200px;">
+            <div class="bar-label">Fuel Cost / day</div>
+            <div class="bar-track"><div class="bar-fill bar-after" style="width:67%;">$1,625</div></div>
+          </div>
+          <span class="green-text" style="font-size:1.3em;">−33%</span>
+        </div>
+      </div>
+
+      <div class="bar-wrap" style="margin-top:14px;">
+        <div style="display:flex;gap:8px;align-items:center;font-size:0.45em;">
+          <div style="width:200px;">
+            <div class="bar-label">CO₂ / day</div>
+            <div class="bar-track"><div class="bar-fill bar-before" style="width:100%;">~230 kg</div></div>
+          </div>
+          <div style="width:200px;">
+            <div class="bar-label">CO₂ / day</div>
+            <div class="bar-track"><div class="bar-fill bar-after" style="width:67%;">~155 kg</div></div>
+          </div>
+          <span class="green-text" style="font-size:1.3em;">−33%</span>
+        </div>
+      </div>
+
+      <div class="bar-wrap" style="margin-top:14px;">
+        <div style="display:flex;gap:8px;align-items:center;font-size:0.45em;">
+          <div style="width:200px;">
+            <div class="bar-label">Vehicles dispatched</div>
+            <div class="bar-track"><div class="bar-fill bar-before" style="width:100%;">15 vehicles</div></div>
+          </div>
+          <div style="width:200px;">
+            <div class="bar-label">Vehicles dispatched</div>
+            <div class="bar-track"><div class="bar-fill bar-after" style="width:80%;">12 vehicles</div></div>
+          </div>
+          <span class="green-text" style="font-size:1.3em;">−3</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cols2" style="gap:12px;">
+        <div class="stat-box red"><div class="num">855</div><div class="label">km baseline</div></div>
+        <div class="stat-box green"><div class="num">575</div><div class="label">km optimised</div></div>
+        <div class="stat-box red"><div class="num">$2,420</div><div class="label">fuel / day before</div></div>
+        <div class="stat-box green"><div class="num">$1,625</div><div class="label">fuel / day after</div></div>
+      </div>
+      <div class="card green" style="margin-top:16px;">
+        <h4>vw_route_comparison</h4>
+        <pre style="font-size:0.85em;background:transparent;padding:0;box-shadow:none;"><code class="language-sql" style="font-size:1em;padding:0;background:transparent;">SELECT km_savings_pct,
+       cost_savings_pct,
+       vehicles_saved,
+       co2_saved_kg
+FROM   vw_route_comparison
+WHERE  route_date = TRUNC(SYSDATE)+1;</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 19 – BUSINESS CASE
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-results">
+  <h3>Business case</h3>
+  <h2>Annualised ROI</h2>
+  <div class="divider"></div>
+  <div class="cols3" style="margin:20px 0;">
+    <div class="stat-box green">
+      <div class="num">~$199k</div>
+      <div class="label">fuel saved / year<br/>(250 operating days)</div>
+    </div>
+    <div class="stat-box teal">
+      <div class="num">~280 km</div>
+      <div class="label">less driving / day<br/>72,000 km / year</div>
+    </div>
+    <div class="stat-box gold">
+      <div class="num">~18.8t</div>
+      <div class="label">CO₂ avoided / year<br/>(75 kg × 250 days)</div>
+    </div>
+  </div>
+  <div class="cols2">
+    <table>
+      <tr><th>Metric</th><th>Per Day</th><th>Per Year</th></tr>
+      <tr><td>Distance saved</td><td class="tag-green">~280 km</td><td class="tag-green">~70,000 km</td></tr>
+      <tr><td>Fuel cost saved</td><td class="tag-green">~$795</td><td class="tag-green">~$199,000</td></tr>
+      <tr><td>CO₂ avoided</td><td class="tag-green">~75 kg</td><td class="tag-green">~18.8 tonnes</td></tr>
+      <tr><td>Vehicles freed</td><td class="tag-teal">3 vehicles</td><td class="tag-teal">Available for other routes</td></tr>
+      <tr><td>Km saving %</td><td class="tag-green">~33%</td><td class="tag-green">~33%</td></tr>
+      <tr><td>Cost saving %</td><td class="tag-green">~33%</td><td class="tag-green">~33%</td></tr>
+    </table>
+    <div class="card green">
+      <h4>One SQL query delivers this</h4>
+      <pre style="font-size:0.8em;background:transparent;padding:0;box-shadow:none;"><code class="language-sql" style="font-size:0.95em;padding:0;background:transparent;">SELECT
+  ROUND(base_fuel_cost
+        - opt_fuel_cost, 2)    AS usd_saved_today,
+  ROUND((base_fuel_cost
+        - opt_fuel_cost)*250,0) AS usd_saved_yr,
+  ROUND((base_co2_kg
+        - opt_co2_kg)*250/1000,1) AS co2_t_yr
+FROM vw_route_comparison
+WHERE route_date = TRUNC(SYSDATE)+1;</code></pre>
+      <p style="margin-top:8px;">The view joins <code>fleet_routes_baseline</code> and <code>fleet_routes_optimized</code> — Oracle calculates the savings in a single scan.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 20 – THE CLAUDE MCP AGENT
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide-agent">
+  <h3>Oracle 26ai + Claude</h3>
+  <h2>SQLcl as an MCP Agent<span class="feature-badge">sql /nolog -mcp</span></h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <p style="font-size:0.52em;color:#ccc;margin-top:0;">
+        SQLcl exposes an <span class="highlight">MCP (Model Context Protocol) server</span>
+        that gives Claude direct, tool-based access to the database.
+        Claude becomes an <span class="highlight">agentic loop</span> —
+        plan → execute SQL → read results → decide next step.
+      </p>
+      <div class="arch-lane" style="border-color:#e74c3c33;">
+        <div class="arch-lane-title" style="color:var(--oracle-gold);">Developer Tooling</div>
+        <div class="arch-items">
+          <div class="arch-box">VSCode</div>
+          <div style="color:#666;align-self:center;">→</div>
+          <div class="arch-box">SQLcl Extension</div>
+          <div style="color:#666;align-self:center;">→</div>
+          <div class="arch-box" style="border-color:#9b59b6;color:#c39bd3;">MCP Server<br/><small>sql /nolog -mcp</small></div>
+          <div style="color:#666;align-self:center;">→</div>
+          <div class="arch-box" style="border-color:var(--oracle-red);color:#e74c3c;">Claude Agent</div>
+        </div>
+      </div>
+      <div class="arch-lane" style="margin-top:8px;border-color:#2ecc7133;">
+        <div class="arch-lane-title" style="color:var(--oracle-teal);">MCP Tools exposed to Claude</div>
+        <div class="arch-items">
+          <div class="arch-box">execute_sql</div>
+          <div class="arch-box">run_script</div>
+          <div class="arch-box">describe_object</div>
+          <div class="arch-box">list_tables</div>
+        </div>
+      </div>
+      <div class="arch-lane" style="margin-top:8px;border-color:#00b4d833;">
+        <div class="arch-lane-title" style="color:var(--oracle-green);">Oracle 26ai ADW</div>
+        <div class="arch-items">
+          <div class="arch-box">Spatial Engine</div>
+          <div class="arch-box">Vector Search</div>
+          <div class="arch-box">JSON Duality</div>
+          <div class="arch-box">Partitioned Tables</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card gold" style="margin-bottom:14px;">
+        <h4>Start the MCP server</h4>
+        <pre style="font-size:0.85em;background:rgba(0,0,0,0.3);border-radius:6px;padding:10px;"><code>sql /nolog -mcp</code></pre>
+        <p>Then in Claude: connect with your wallet and credentials. Claude will have live SQL access.</p>
+      </div>
+      <div class="card teal" style="margin-bottom:14px;">
+        <h4>What you can ask Claude</h4>
+        <ul>
+          <li><em>"Run the full VRP demo end-to-end"</em></li>
+          <li><em>"Show me the before/after cost comparison"</em></li>
+          <li><em>"Find routes similar to route #3 using vector search"</em></li>
+          <li><em>"Which vehicles are in the CBD zone right now?"</em></li>
+          <li><em>"What is our annual CO₂ saving from optimisation?"</em></li>
+        </ul>
+      </div>
+      <div class="card green">
+        <h4>vs. running scripts manually</h4>
+        <p>Without MCP: engineer runs each <code>@sql/0x_*.sql</code> file<br/>
+        <strong style="color:#2ecc71;">With MCP:</strong> Claude plans, executes, interprets, and reports — all in one conversation</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 21 – CONNECTION SETUP
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Setup</h3>
+  <h2>Connecting to Oracle ADW</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <div>
+      <div class="card teal" style="margin-bottom:14px;">
+        <h4>Option A: VSCode Extension</h4>
+        <ol style="padding-left:16px;color:#ccc;font-size:0.95em;line-height:1.8;">
+          <li>Install <strong>Oracle Developer Tools for VSCode</strong></li>
+          <li>Open Oracle Explorer panel</li>
+          <li>Add Connection → Cloud Wallet</li>
+          <li>Select <code>Wallet_YourDB.zip</code></li>
+          <li>Right-click <code>.sql</code> → Run in SQLcl</li>
+        </ol>
+      </div>
+      <div class="card gold">
+        <h4>Option B: SQLcl CLI</h4>
+        <ol style="padding-left:16px;color:#ccc;font-size:0.95em;line-height:1.8;">
+          <li>Download SQLcl from oracle.com/tools/sqlcl</li>
+          <li>Requires Java 11+</li>
+          <li>Add <code>bin/</code> to PATH</li>
+          <li>Connect as shown →</li>
+        </ol>
+      </div>
+    </div>
+    <pre><code class="language-sql">-- ── Option B: SQLcl CLI connection ───────────
+sql /nolog
+
+SQL> -- Point at your wallet ZIP (no extraction needed)
+SQL> SET CLOUDCONFIG wallet/Wallet_YourDB.zip
+
+SQL> -- Connect (service names in tnsnames.ora)
+SQL> CONNECT fleet_demo/YourPassword@yourdb_medium
+
+SQL> -- Verify
+SQL> SELECT BANNER_FULL FROM v$version;
+-- Oracle Database 26ai Enterprise Edition...
+
+SQL> -- Run the full demo
+SQL> @sql/00_master_run.sql
+
+
+-- ── Option C: MCP Agent ───────────────────────
+-- Terminal 1: Start the MCP server
+$ sql /nolog -mcp
+
+-- Claude Desktop / VSCode MCP config
+-- (see config/mcp_servers.json)
+{
+  "mcpServers": {
+    "oracle-fleet-db": {
+      "command": "sql",
+      "args": ["/nolog", "-mcp"],
+      "env": {
+        "SQLCL_CLOUDCONFIG":
+          "/path/to/Wallet_YourDB.zip"
+      }
+    }
+  }
+}</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 22 – FEATURE SUMMARY
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Summary</h3>
+  <h2>Oracle 26ai Features Demonstrated</h2>
+  <div class="divider"></div>
+  <table style="margin-top:10px;">
+    <tr>
+      <th>Feature</th>
+      <th>What it does in this demo</th>
+      <th>Script</th>
+      <th>Table / Object</th>
+    </tr>
+    <tr>
+      <td><span class="tag-teal">Oracle Spatial</span></td>
+      <td>Store &amp; query depot/customer/route/vehicle GPS geometry</td>
+      <td>01–06</td>
+      <td>All FLEET_ tables</td>
+    </tr>
+    <tr>
+      <td><span class="tag-teal">SPATIAL_INDEX_V2</span></td>
+      <td>R-Tree index enables sub-ms SDO_NN / SDO_WITHIN_DISTANCE</td>
+      <td>01</td>
+      <td>8 spatial indexes</td>
+    </tr>
+    <tr>
+      <td><span class="tag-green">VECTOR(128,FLOAT32)</span></td>
+      <td>Store route fingerprints for AI similarity search</td>
+      <td>04, 06</td>
+      <td>fleet_routes_optimized</td>
+    </tr>
+    <tr>
+      <td><span class="tag-green">HNSW Vector Index</span></td>
+      <td>Approximate nearest-neighbour (cosine) on route embeddings</td>
+      <td>01, 06</td>
+      <td>idx_fleet_ro_vector</td>
+    </tr>
+    <tr>
+      <td><span class="tag-gold">Native JSON</span></td>
+      <td>Schema-flexible metadata (VIN, dock config, algo params)</td>
+      <td>02, 06</td>
+      <td>*_meta columns</td>
+    </tr>
+    <tr>
+      <td><span class="tag-gold">JSON Duality View</span></td>
+      <td>Orders exposed as JSON documents with INSERT/UPDATE/DELETE</td>
+      <td>01, 06</td>
+      <td>orders_duality</td>
+    </tr>
+    <tr>
+      <td><span class="tag-teal">Range Partitioning</span></td>
+      <td>Quarterly partitions on telemetry timestamp → partition pruning</td>
+      <td>01, 05</td>
+      <td>fleet_telemetry</td>
+    </tr>
+    <tr>
+      <td><span class="tag-gold">PL/SQL</span></td>
+      <td>In-database VRP solver, Haversine formula, telemetry generator</td>
+      <td>03, 04, 05</td>
+      <td>Anonymous blocks</td>
+    </tr>
+    <tr>
+      <td><span class="tag-teal">SQLcl MCP</span></td>
+      <td>Claude as agentic SQL executor via MCP protocol</td>
+      <td>All</td>
+      <td>sql /nolog -mcp</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 23 – PROJECT STRUCTURE
+═══════════════════════════════════════════════════════════════════ -->
+<section>
+  <h3>Project layout</h3>
+  <h2>Files in the Demo Package</h2>
+  <div class="divider"></div>
+  <div class="cols2">
+    <pre style="font-size:0.8em;"><code class="language-bash">26ai-Spatial-DEMO/
+├── README.md
+├── architecture.drawio        ← open in VSCode Draw.io
+├── presentation/
+│   └── fleet-demo.html        ← this presentation
+├── .vscode/
+│   ├── extensions.json        ← recommended extensions
+│   └── settings.json          ← SQLcl connection profile
+├── config/
+│   ├── connection.properties.template
+│   └── mcp_servers.json       ← MCP config block
+├── wallet/
+│   ├── README.md              ← wallet setup guide
+│   └── Wallet_YourDB.zip      ← YOUR wallet (git-ignored)
+└── sql/
+    ├── 00_master_run.sql      ← run everything at once
+    ├── 01_create_schema.sql   ← DDL + indexes + views
+    ├── 02_seed_data.sql       ← real Chicago data
+    ├── 03_baseline_routes.sql ← naive simulation
+    ├── 04_vrp_optimize.sql    ← VRP + VECTOR embed
+    ├── 05_telemetry_stream.sql← GPS simulation
+    ├── 06_spatial_analysis.sql← 9 showcase queries
+    ├── 07_report.sql          ← executive summary
+    └── 99_cleanup.sql         ← drop all objects</code></pre>
+    <div>
+      <div class="card teal" style="margin-bottom:14px;">
+        <h4>Quick start</h4>
+        <pre style="font-size:0.85em;background:rgba(0,0,0,0.3);border-radius:6px;padding:10px;"><code>unzip oracle-26ai-fleet-demo.zip
+cd 26ai-Spatial-DEMO
+# Put wallet in wallet/
+code .
+# Then: @sql/00_master_run.sql</code></pre>
+      </div>
+      <div class="card gold">
+        <h4>VSCode extensions needed</h4>
+        <ul>
+          <li><code>oracle.oracle-developer-tools-for-vscode</code></li>
+          <li><code>hediet.vscode-drawio</code> (for diagram)</li>
+          <li><code>redhat.vscode-yaml</code> (for MCP config)</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <h4>Prerequisites</h4>
+        <ul>
+          <li>Oracle ADW instance (Always Free works)</li>
+          <li>SQLcl 24.1+ · Java 11+</li>
+          <li>Wallet ZIP downloaded from OCI Console</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 24 – ARCHITECTURE OVERVIEW
+═══════════════════════════════════════════════════════════════════ -->
+<section data-background="linear-gradient(135deg,#0d0d1a 0%,#1a1a2e 100%)">
+  <h3>Architecture</h3>
+  <h2>System Overview</h2>
+  <div class="divider"></div>
+
+  <!-- Lane 1: Developer Tooling -->
+  <div class="arch-lane" style="border-color:#6c8ebf55;background:rgba(13,32,64,0.4);">
+    <div class="arch-lane-title" style="color:#6c8ebf;">Developer Tooling</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:0.44em;">
+      <div class="arch-box" style="border-color:#0078d4;color:#5ba7e8;">VSCode IDE</div>
+      <span style="color:#555;font-size:1.2em;">→</span>
+      <div class="arch-box" style="border-color:#f5a623;color:#f5a623;">SQLcl Extension<br/>(GUI+editor)</div>
+      <span style="color:#555;font-size:1.2em;">→</span>
+      <div class="arch-box" style="border-color:#9b59b6;color:#c39bd3;">SQLcl MCP Server<br/>sql /nolog -mcp</div>
+      <span style="color:#555;font-size:1.2em;">→</span>
+      <div class="arch-box" style="border-color:var(--oracle-red);color:#e74c3c;">Claude AI Agent<br/>(MCP tools)</div>
+      <span style="color:#555;font-size:1.2em;margin-left:20px;">|</span>
+      <div class="arch-box" style="border-color:#fff2cc;color:#e8a838;margin-left:10px;">Demo SQL Scripts<br/>sql/00–07</div>
+      <span style="color:#555;font-size:1.2em;">→</span>
+      <div class="arch-box" style="border-color:#00897b;color:#2ecc71;">ADW Wallet<br/>mTLS auth</div>
+    </div>
+  </div>
+
+  <!-- Lane 2: Oracle 26ai ADW -->
+  <div class="arch-lane" style="border-color:#9673a655;background:rgba(26,10,46,0.4);margin-top:10px;">
+    <div class="arch-lane-title" style="color:#c39bd3;">Oracle 26ai Autonomous Data Warehouse</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:0.4em;">
+      <div class="arch-box" style="border-color:#f5a62355;color:#f5a623;">🗺️ Oracle Spatial<br/>SDO_GEOMETRY</div>
+      <div class="arch-box" style="border-color:#2ecc7155;color:#2ecc71;">🧠 AI Vector Search<br/>VECTOR + HNSW</div>
+      <div class="arch-box" style="border-color:#9b59b655;color:#c39bd3;">📄 JSON + Duality<br/>orders_duality</div>
+      <div class="arch-box" style="border-color:#f5a62355;color:#f5a623;">⚡ Partitioning<br/>fleet_telemetry</div>
+      <div class="arch-box" style="border-color:#e74c3c55;color:#e74c3c;">💻 PL/SQL VRP<br/>Haversine solver</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.36em;margin-top:8px;">
+      <div class="arch-box">fleet_depots</div>
+      <div class="arch-box">fleet_vehicles</div>
+      <div class="arch-box">fleet_customers</div>
+      <div class="arch-box">fleet_orders</div>
+      <div class="arch-box" style="border-color:#e74c3c44;">fleet_routes_baseline</div>
+      <div class="arch-box" style="border-color:#2ecc7144;">fleet_routes_optimized</div>
+      <div class="arch-box">fleet_route_stops</div>
+      <div class="arch-box" style="border-color:#f5a62344;">fleet_telemetry ⚡</div>
+      <div class="arch-box">fleet_traffic_zones</div>
+      <div class="arch-box" style="border-color:#6c8ebf44;">vw_route_comparison</div>
+      <div class="arch-box" style="border-color:#9b59b644;">orders_duality (JSON)</div>
+    </div>
+  </div>
+
+  <!-- Lane 3: Data flow -->
+  <div class="arch-lane" style="border-color:#66666644;background:rgba(30,30,30,0.3);margin-top:10px;">
+    <div class="arch-lane-title" style="color:#999;">Data Flow</div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:0.38em;flex-wrap:wrap;">
+      <div class="arch-box">①&nbsp;Seed data</div><span style="color:#555;">→</span>
+      <div class="arch-box" style="border-color:#e74c3c44;color:#e74c3c;">②&nbsp;Baseline ~855km</div><span style="color:#555;">→</span>
+      <div class="arch-box" style="color:#e8a838;">③&nbsp;VRP Optimise</div><span style="color:#555;">→</span>
+      <div class="arch-box" style="border-color:#2ecc7144;color:#2ecc71;">④&nbsp;Optimised ~575km</div><span style="color:#555;">→</span>
+      <div class="arch-box" style="color:#00b4d8;">⑤&nbsp;Telemetry</div><span style="color:#555;">→</span>
+      <div class="arch-box" style="color:#9b59b6;">⑥&nbsp;Analysis</div><span style="color:#555;">→</span>
+      <div class="arch-box" style="border-color:#2ecc7144;color:#2ecc71;font-weight:700;">⑦&nbsp;~$199k/yr ROI</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SLIDE 25 – CLOSING
+═══════════════════════════════════════════════════════════════════ -->
+<section data-background="linear-gradient(135deg,#0d0d1a 0%,#1a1a2e 60%,#0a2010 100%)">
+  <div style="text-align:center;padding-top:20px;">
+    <span class="oracle-badge">Oracle 26ai</span>
+    <h1 style="margin-top:20px;line-height:1.2;">
+      One Database.<br/>Every Dimension.
+    </h1>
+    <div style="width:80px;height:4px;background:var(--oracle-red);margin:20px auto;border-radius:2px;"></div>
+
+    <div style="display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin:30px 0;">
+      <div class="stat-box green" style="min-width:160px;">
+        <div class="num">~33%</div>
+        <div class="label">Distance reduction</div>
+      </div>
+      <div class="stat-box green" style="min-width:160px;">
+        <div class="num">~$199k</div>
+        <div class="label">Annual fuel savings</div>
+      </div>
+      <div class="stat-box teal" style="min-width:160px;">
+        <div class="num">~18.8t</div>
+        <div class="label">CO₂ avoided / year</div>
+      </div>
+      <div class="stat-box gold" style="min-width:160px;">
+        <div class="num">9</div>
+        <div class="label">Oracle 26ai features</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:20px;">
+      <span class="feature-badge">Oracle Spatial</span>
+      <span class="feature-badge">AI Vector Search</span>
+      <span class="feature-badge">JSON Duality</span>
+      <span class="feature-badge">Partitioning</span>
+      <span class="feature-badge">PL/SQL VRP</span>
+      <span class="feature-badge">SQLcl MCP Agent</span>
+    </div>
+
+    <p style="font-size:0.38em;color:#555;margin-top:40px;">
+      Demo package: <span style="color:#888;">oracle-26ai-fleet-demo.zip</span> ·
+      Run: <span style="color:#e8a838;">@sql/00_master_run.sql</span> ·
+      Agent: <span style="color:#e8a838;">sql /nolog -mcp</span>
+    </p>
+  </div>
+</section>
+
+</div><!-- /slides -->
+</div><!-- /reveal -->
+
+<!-- Reveal.js + plugins from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+
+<script>
+Reveal.initialize({
+  hash:           true,
+  slideNumber:    'c/t',
+  progress:       true,
+  controls:       true,
+  controlsLayout: 'bottom-right',
+  transition:     'slide',
+  transitionSpeed:'fast',
+  backgroundTransition: 'fade',
+  width:  1600,
+  height:  900,
+  margin:  0.04,
+  plugins: [ RevealHighlight, RevealNotes ],
+  highlight: {
+    highlightOnLoad: true
+  }
+});
+</script>
+</body>
+</html>
