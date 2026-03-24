@@ -112,11 +112,6 @@ DECLARE
     RETURN (EXTRACT(HOUR FROM p_ts)*60 + EXTRACT(MINUTE FROM p_ts));
   END ts_to_min;
 
-  FUNCTION make_point(lon NUMBER, lat NUMBER) RETURN SDO_GEOMETRY IS
-  BEGIN
-    RETURN SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(lon,lat,NULL),NULL,NULL);
-  END make_point;
-
   -- Generate a deterministic 128-float route fingerprint
   -- Based on: centroid, spread, total distance, stop count
   -- (In production this would use an ML embedding model via ONNX)
@@ -125,29 +120,35 @@ DECLARE
       p_spread_km    NUMBER, p_total_km     NUMBER,
       p_num_stops    NUMBER, p_depot_id     NUMBER
   ) RETURN VECTOR IS
-    v_arr  VECTOR(128, FLOAT32);
-    v_vals SYS.ODCINumberList := SYS.ODCINumberList();
-    v_base NUMBER;
+    -- Use associative array (no EXTEND, no SQL collection types)
+    TYPE t_floats IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+    v_vals t_floats;
+    v_str  VARCHAR2(8000) := '[';
+    v_base PLS_INTEGER;
   BEGIN
-    v_vals.EXTEND(128);
     -- Dimensions 1-8: spatial characteristics
-    v_vals(1)  := p_centroid_lon + 87.7;    -- normalise around Chicago
-    v_vals(2)  := p_centroid_lat - 41.9;
-    v_vals(3)  := p_spread_km / 50;
-    v_vals(4)  := p_total_km   / 200;
-    v_vals(5)  := p_num_stops  / 10;
-    v_vals(6)  := p_depot_id   / 3;
-    v_vals(7)  := SIN(p_centroid_lon * 0.1);
-    v_vals(8)  := COS(p_centroid_lat * 0.1);
+    v_vals(1) := p_centroid_lon + 87.7;    -- normalise around Chicago
+    v_vals(2) := p_centroid_lat - 41.9;
+    v_vals(3) := p_spread_km / 50;
+    v_vals(4) := p_total_km   / 200;
+    v_vals(5) := p_num_stops  / 10;
+    v_vals(6) := p_depot_id   / 3;
+    v_vals(7) := SIN(p_centroid_lon * 0.1);
+    v_vals(8) := COS(p_centroid_lat * 0.1);
     -- Dimensions 9-128: harmonic features (simulate learned embedding)
     FOR i IN 9..128 LOOP
-      v_base   := MOD(i, 8) + 1;
-      v_vals(i):= SIN(v_vals(v_base) * i * 0.31415)
-                * COS(v_vals(MOD(i,6)+1) * i * 0.27182);
+      v_base    := MOD(i, 8) + 1;
+      v_vals(i) := SIN(v_vals(v_base) * i * 0.31415)
+                 * COS(v_vals(MOD(i,6)+1) * i * 0.27182);
     END LOOP;
-    -- Convert to VECTOR
-    v_arr := TO_VECTOR(v_vals, 128, FLOAT32);
-    RETURN v_arr;
+    -- Build bracketed decimal string for TO_VECTOR
+    -- FM format avoids scientific notation; 0 prefix avoids leading dot
+    FOR i IN 1..128 LOOP
+      IF i > 1 THEN v_str := v_str || ','; END IF;
+      v_str := v_str || TO_CHAR(v_vals(i), 'FM999990.9999999');
+    END LOOP;
+    v_str := v_str || ']';
+    RETURN TO_VECTOR(v_str, 128, FLOAT32);
   EXCEPTION WHEN OTHERS THEN RETURN NULL;
   END make_route_vector;
 
@@ -277,7 +278,7 @@ BEGIN
         distance_from_prev, cumulative_dist_km
     ) VALUES (
         v_route_id, 'OPTIMIZED', 0, 'DEPOT_START',
-        make_point(v_cur_lon, v_cur_lat),
+        SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(v_cur_lon,v_cur_lat,NULL),NULL,NULL),
         v_cur_time, v_cur_time, 0, 0
     );
 
@@ -347,7 +348,7 @@ BEGIN
       ) VALUES (
           v_route_id, 'OPTIMIZED', v_stop_seq, 'DELIVERY',
           v_order_ids(v_best_idx),
-          make_point(v_ord_lons(v_best_idx), v_ord_lats(v_best_idx)),
+          SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(v_ord_lons(v_best_idx),v_ord_lats(v_best_idx),NULL),NULL,NULL),
           v_arr_time, v_dep_time,
           ROUND(v_dist, 3), ROUND(v_cum_dist, 3)
       );
@@ -386,7 +387,7 @@ BEGIN
             distance_from_prev, cumulative_dist_km
         ) VALUES (
             v_route_id, 'OPTIMIZED', v_stop_seq + 1, 'DEPOT_END',
-            make_point(v_dep_lons(v_idx), v_dep_lats(v_idx)),
+            SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(v_dep_lons(v_idx),v_dep_lats(v_idx),NULL),NULL,NULL),
             v_arr_time, v_arr_time,
             ROUND(v_ret_dist,3), ROUND(v_cum_dist,3)
         );
@@ -411,19 +412,27 @@ BEGIN
                             ELSE 0 END;
       -- Route centroid for vector embedding
       v_clon NUMBER; v_clat NUMBER; v_spread NUMBER;
+      v_rvec VECTOR(128, FLOAT32);
     BEGIN
-      SELECT AVG(location.sdo_point.x),
-             AVG(location.sdo_point.y)
+      SELECT AVG(s.location.sdo_point.x),
+             AVG(s.location.sdo_point.y)
       INTO   v_clon, v_clat
-      FROM   fleet_route_stops
-      WHERE  route_id   = v_route_id
-      AND    route_type = 'OPTIMIZED'
-      AND    stop_type  = 'DELIVERY';
+      FROM   fleet_route_stops s
+      WHERE  s.route_id   = v_route_id
+      AND    s.route_type = 'OPTIMIZED'
+      AND    s.stop_type  = 'DELIVERY';
 
       v_spread := NVL(haversine(
                     NVL(v_clon, v_dep_lons(v_idx)),
                     NVL(v_clat, v_dep_lats(v_idx)),
                     v_dep_lons(v_idx), v_dep_lats(v_idx)), 5);
+
+      -- Compute vector in PL/SQL first (local fn cannot be called in SQL)
+      v_rvec := make_route_vector(
+                  NVL(v_clon, v_dep_lons(v_idx)),
+                  NVL(v_clat, v_dep_lats(v_idx)),
+                  v_spread, v_total_dist,
+                  v_stop_seq, v_veh_depot(v_idx));
 
       UPDATE fleet_routes_optimized SET
           route_end         = v_arr_time,
@@ -436,11 +445,7 @@ BEGIN
           savings_km        = ROUND(v_sav_km,   3),
           savings_cost      = ROUND(v_sav_cost, 2),
           savings_pct       = ROUND(v_sav_pct,  2),
-          route_vector      = make_route_vector(
-                                NVL(v_clon, v_dep_lons(v_idx)),
-                                NVL(v_clat, v_dep_lats(v_idx)),
-                                v_spread, v_total_dist,
-                                v_stop_seq, v_veh_depot(v_idx))
+          route_vector      = v_rvec
       WHERE route_id = v_route_id;
 
       DBMS_OUTPUT.PUT_LINE(

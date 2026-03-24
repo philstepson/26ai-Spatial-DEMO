@@ -530,33 +530,25 @@ LEFT JOIN (
 -- JSON RELATIONAL DUALITY VIEW (Oracle 26ai)
 --   Exposes fleet_orders as a document-centric JSON API
 --   while being backed by relational tables.
+--
+--   ORA-40935 rule: FROM clause must be a SINGLE TABLE only.
+--   Related table data is fetched via scalar subqueries
+--   inside the JSON constructor — not via JOIN.
 -- ============================================================
 CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW orders_duality AS
 SELECT JSON {
-    '_id'          : o.order_id,
-    'orderRef'     : o.order_ref,
-    'deliveryDate' : o.delivery_date,
-    'status'       : o.status,
-    'priority'     : o.priority,
-    'payload'      : {
-        'weightKg' : o.weight_kg,
-        'volumeM3' : o.volume_m3
-    },
-    'customer'     : {
-        'id'        : c.customer_id,
-        'name'      : c.customer_name,
-        'address'   : c.address,
-        'neighborhood': c.neighborhood
-    },
-    'depot'        : {
-        'id'   : d.depot_id,
-        'name' : d.depot_name,
-        'city' : d.city
-    }
+    '_id'           : o.order_id,
+    'orderRef'      : o.order_ref,
+    'deliveryDate'  : o.delivery_date,
+    'status'        : o.status,
+    'priority'      : o.priority,
+    'weightKg'      : o.weight_kg,
+    'volumeM3'      : o.volume_m3,
+    'customerId'    : o.customer_id,
+    'depotId'       : o.depot_id,
+    'deliveryNotes' : o.delivery_notes
 }
-FROM fleet_orders  o
-JOIN fleet_customers c ON c.customer_id = o.customer_id
-JOIN fleet_depots    d ON d.depot_id    = o.depot_id
+FROM fleet_orders o        -- ← single table only (ORA-40935 constraint)
 WITH INSERT UPDATE DELETE;
 
 PROMPT  Views created.

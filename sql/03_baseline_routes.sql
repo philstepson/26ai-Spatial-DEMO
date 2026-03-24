@@ -97,26 +97,10 @@ DECLARE
     RETURN c_r * c;
   END haversine;
 
-  -- ----------------------------------------------------------------
-  -- Build a simple 2-point SDO LineString
-  -- (full route path built incrementally via SDO_UTIL.APPEND)
-  -- ----------------------------------------------------------------
-  FUNCTION make_point(p_lon NUMBER, p_lat NUMBER) RETURN SDO_GEOMETRY IS
-  BEGIN
-    RETURN SDO_GEOMETRY(2001, 4326,
-             SDO_POINT_TYPE(p_lon, p_lat, NULL), NULL, NULL);
-  END make_point;
-
 BEGIN
   -- ----------------------------------------------------------------
   -- Load vehicles (sorted: depot 1 first, then 2, then 3)
   -- ----------------------------------------------------------------
-  DECLARE
-    CURSOR c_veh IS
-      SELECT v.vehicle_id, v.depot_id,
-             SDO_GEOM.SDO_COORD_REF_SYS(v.current_location).x  -- workaround
-               -- Actually: use depot location coordinates
-      FROM fleet_vehicles v ORDER BY v.depot_id, v.vehicle_id;
   BEGIN
     FOR r IN (
       SELECT v.vehicle_id, v.depot_id,
@@ -194,7 +178,7 @@ BEGIN
         distance_from_prev, cumulative_dist_km
     ) VALUES (
         v_route_id, 'BASELINE', 0, 'DEPOT_START',
-        make_point(v_prev_lon, v_prev_lat),
+        SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(v_prev_lon,v_prev_lat,NULL),NULL,NULL),
         v_cur_time, v_cur_time, 0, 0
     );
 
@@ -228,7 +212,7 @@ BEGIN
         ) VALUES (
             v_route_id, 'BASELINE', v_stop_seq, 'DELIVERY',
             v_orders(o_idx),
-            make_point(v_cur_lon, v_cur_lat),
+            SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(v_cur_lon,v_cur_lat,NULL),NULL,NULL),
             v_arr_time, v_dep_time,
             ROUND(v_seg_dist, 3), ROUND(v_cum_dist, 3)
         );
@@ -262,7 +246,7 @@ BEGIN
         distance_from_prev, cumulative_dist_km
     ) VALUES (
         v_route_id, 'BASELINE', v_stop_seq + 1, 'DEPOT_END',
-        make_point(v_depot_lons(v_idx), v_depot_lats(v_idx)),
+        SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(v_depot_lons(v_idx),v_depot_lats(v_idx),NULL),NULL,NULL),
         v_arr_time, v_arr_time,
         ROUND(v_seg_dist, 3), ROUND(v_cum_dist, 3)
     );

@@ -8,6 +8,7 @@
 SET SERVEROUTPUT ON SIZE UNLIMITED
 SET ECHO OFF
 SET FEEDBACK ON
+SET DEFINE OFF   -- prevent substitution variable expansion in data values
 
 PROMPT
 PROMPT ============================================================
@@ -187,267 +188,166 @@ PROMPT    15 vehicles inserted (5 per depot).
 -- ============================================================
 PROMPT  Inserting 50 customers...
 
--- Macro to reduce repetition:
---   INSERT INTO fleet_customers(customer_name, neighborhood, address,
---       location, time_window_open, time_window_close, service_minutes, priority)
+-- Named-column inserts: immune to column-count mismatches.
+-- city defaults to 'Chicago'; only overridden for suburbs.
 
 -- --- NORTH SIDE ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Windy City Auto Parts','Lincoln Park',
-    '2455 N Clark St, Chicago, IL 60614',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6354,41.9244,NULL),NULL,NULL),
-    0700,1600,20,2,'+1-312-555-0101',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Windy City Auto Parts','Lincoln Park','Chicago','2455 N Clark St, Chicago, IL 60614',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6354,41.9244,NULL),NULL,NULL),0700,1600,20,2,'+1-312-555-0101');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Wicker Park Brewing Supplies','Wicker Park',
-    '1565 N Milwaukee Ave, Chicago, IL 60622',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6778,41.9080,NULL),NULL,NULL),
-    0800,1700,15,3,'+1-312-555-0102',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Wicker Park Brewing Supplies','Wicker Park','Chicago','1565 N Milwaukee Ave, Chicago, IL 60622',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6778,41.9080,NULL),NULL,NULL),0800,1700,15,3,'+1-312-555-0102');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Bucktown Office Hub','Bucktown',
-    '2022 W Armitage Ave, Chicago, IL 60647',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6770,41.9195,NULL),NULL,NULL),
-    0900,1800,10,3,'+1-312-555-0103',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Bucktown Office Hub','Bucktown','Chicago','2022 W Armitage Ave, Chicago, IL 60647',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6770,41.9195,NULL),NULL,NULL),0900,1800,10,3,'+1-312-555-0103');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Logan Square Freight Co','Logan Square',
-    '2840 N Milwaukee Ave, Chicago, IL 60618',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7079,41.9222,NULL),NULL,NULL),
-    0600,1500,25,1,'+1-312-555-0104',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Logan Square Freight Co','Logan Square','Chicago','2840 N Milwaukee Ave, Chicago, IL 60618',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7079,41.9222,NULL),NULL,NULL),0600,1500,25,1,'+1-312-555-0104');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'River North Gallery','River North',
-    '222 W Huron St, Chicago, IL 60654',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6329,41.8922,NULL),NULL,NULL),
-    1000,1900,10,3,'+1-312-555-0105',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('River North Gallery','River North','Chicago','222 W Huron St, Chicago, IL 60654',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6329,41.8922,NULL),NULL,NULL),1000,1900,10,3,'+1-312-555-0105');
 
 -- --- DOWNTOWN CORE ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Gold Coast Fine Foods','Gold Coast',
-    '1500 N Lake Shore Dr, Chicago, IL 60610',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6268,41.8996,NULL),NULL,NULL),
-    0700,1200,30,1,'+1-312-555-0106',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Gold Coast Fine Foods','Gold Coast','Chicago','1500 N Lake Shore Dr, Chicago, IL 60610',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6268,41.8996,NULL),NULL,NULL),0700,1200,30,1,'+1-312-555-0106');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Streeterville Medical Supplies','Streeterville',
-    '320 E Huron St, Chicago, IL 60611',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6180,41.8941,NULL),NULL,NULL),
-    0600,1400,20,1,'+1-312-555-0107',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Streeterville Medical Supplies','Streeterville','Chicago','320 E Huron St, Chicago, IL 60611',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6180,41.8941,NULL),NULL,NULL),0600,1400,20,1,'+1-312-555-0107');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'The Loop Print Shop','The Loop',
-    '77 W Wacker Dr, Chicago, IL 60601',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6298,41.8781,NULL),NULL,NULL),
-    0800,1700,15,3,'+1-312-555-0108',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('The Loop Print Shop','The Loop','Chicago','77 W Wacker Dr, Chicago, IL 60601',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6298,41.8781,NULL),NULL,NULL),0800,1700,15,3,'+1-312-555-0108');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'South Loop Coffee Roasters','South Loop',
-    '1140 S Wabash Ave, Chicago, IL 60605',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6256,41.8669,NULL),NULL,NULL),
-    0500,1100,20,2,'+1-312-555-0109',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('South Loop Coffee Roasters','South Loop','Chicago','1140 S Wabash Ave, Chicago, IL 60605',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6256,41.8669,NULL),NULL,NULL),0500,1100,20,2,'+1-312-555-0109');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Near West Restaurant Supply','Near West Side',
-    '1411 W Madison St, Chicago, IL 60607',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6556,41.8783,NULL),NULL,NULL),
-    0500,1000,30,1,'+1-312-555-0110',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Near West Restaurant Supply','Near West Side','Chicago','1411 W Madison St, Chicago, IL 60607',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6556,41.8783,NULL),NULL,NULL),0500,1000,30,1,'+1-312-555-0110');
 
 -- --- WEST SIDE ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Greektown Deli Distributors','Greektown',
-    '327 S Halsted St, Chicago, IL 60661',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6469,41.8782,NULL),NULL,NULL),
-    0600,1400,15,2,'+1-312-555-0111',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Greektown Deli Distributors','Greektown','Chicago','327 S Halsted St, Chicago, IL 60661',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6469,41.8782,NULL),NULL,NULL),0600,1400,15,2,'+1-312-555-0111');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Little Village Tile & Stone','Little Village',
-    '3158 W 26th St, Chicago, IL 60623',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7186,41.8490,NULL),NULL,NULL),
-    0800,1700,20,3,'+1-312-555-0112',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Little Village Tile and Stone','Little Village','Chicago','3158 W 26th St, Chicago, IL 60623',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7186,41.8490,NULL),NULL,NULL),0800,1700,20,3,'+1-312-555-0112');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Cicero Hardware Depot','Cicero',
-    '5400 W Cermak Rd, Cicero, IL 60804',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7539,41.8456,NULL),NULL,NULL),
-    0700,1700,25,3,'+1-312-555-0113',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Cicero Hardware Depot','Cicero','Cicero','5400 W Cermak Rd, Cicero, IL 60804',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7539,41.8456,NULL),NULL,NULL),0700,1700,25,3,'+1-312-555-0113');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Oak Park Organic Market','Oak Park',
-    '1101 Lake St, Oak Park, IL 60301',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7845,41.8850,NULL),NULL,NULL),
-    0700,1300,20,2,'+1-708-555-0114',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Oak Park Organic Market','Oak Park','Oak Park','1101 Lake St, Oak Park, IL 60301',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7845,41.8850,NULL),NULL,NULL),0700,1300,20,2,'+1-708-555-0114');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Elmwood Park Sports','Elmwood Park',
-    '7433 W Grand Ave, Elmwood Park, IL 60707',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8073,41.9211,NULL),NULL,NULL),
-    0900,1800,15,3,'+1-708-555-0115',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Elmwood Park Sports','Elmwood Park','Elmwood Park','7433 W Grand Ave, Elmwood Park, IL 60707',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8073,41.9211,NULL),NULL,NULL),0900,1800,15,3,'+1-708-555-0115');
 
 -- --- FAR NORTHWEST ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Park Ridge Pharma Logistics','Park Ridge',
-    '400 W Talcott Rd, Park Ridge, IL 60068',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8403,42.0114,NULL),NULL,NULL),
-    0700,1600,20,1,'+1-847-555-0116',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Park Ridge Pharma Logistics','Park Ridge','Park Ridge','400 W Talcott Rd, Park Ridge, IL 60068',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8403,42.0114,NULL),NULL,NULL),0700,1600,20,1,'+1-847-555-0116');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Rosemont Convention Supplies','Rosemont',
-    '5555 N River Rd, Rosemont, IL 60018',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8722,41.9839,NULL),NULL,NULL),
-    0600,2200,15,2,'+1-847-555-0117',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Rosemont Convention Supplies','Rosemont','Rosemont','5555 N River Rd, Rosemont, IL 60018',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8722,41.9839,NULL),NULL,NULL),0600,2200,15,2,'+1-847-555-0117');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Schaumburg Tech Campus','Schaumburg',
-    '1299 E Algonquin Rd, Schaumburg, IL 60196',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.0837,42.0334,NULL),NULL,NULL),
-    0800,1700,20,3,'+1-847-555-0118',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Schaumburg Tech Campus','Schaumburg','Schaumburg','1299 E Algonquin Rd, Schaumburg, IL 60196',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.0837,42.0334,NULL),NULL,NULL),0800,1700,20,3,'+1-847-555-0118');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Des Plaines Cold Storage','Des Plaines',
-    '1700 S Mount Prospect Rd, Des Plaines, IL 60018',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8834,42.0107,NULL),NULL,NULL),
-    0500,1400,30,1,'+1-847-555-0119',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Des Plaines Cold Storage','Des Plaines','Des Plaines','1700 S Mount Prospect Rd, Des Plaines, IL 60018',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8834,42.0107,NULL),NULL,NULL),0500,1400,30,1,'+1-847-555-0119');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Elk Grove Medical Center','Elk Grove Village',
-    '800 Biesterfield Rd, Elk Grove Village, IL 60007',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9970,42.0036,NULL),NULL,NULL),
-    0700,1500,25,1,'+1-847-555-0120',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Elk Grove Medical Center','Elk Grove Village','Elk Grove Village','800 Biesterfield Rd, Elk Grove Village, IL 60007',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9970,42.0036,NULL),NULL,NULL),0700,1500,25,1,'+1-847-555-0120');
 
 -- --- NORTH SUBURBS ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Evanston University Books','Evanston',
-    '800 Emerson St, Evanston, IL 60201',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6878,42.0451,NULL),NULL,NULL),
-    0900,1700,15,3,'+1-847-555-0121',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Evanston University Books','Evanston','Evanston','800 Emerson St, Evanston, IL 60201',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6878,42.0451,NULL),NULL,NULL),0900,1700,15,3,'+1-847-555-0121');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Skokie Electronics','Skokie',
-    '4999 Oakton St, Skokie, IL 60077',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7333,42.0336,NULL),NULL,NULL),
-    0800,1800,15,3,'+1-847-555-0122',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Skokie Electronics','Skokie','Skokie','4999 Oakton St, Skokie, IL 60077',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7333,42.0336,NULL),NULL,NULL),0800,1800,15,3,'+1-847-555-0122');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Niles Furniture Wholesale','Niles',
-    '7255 Oakton St, Niles, IL 60714',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8028,42.0180,NULL),NULL,NULL),
-    0700,1600,30,2,'+1-847-555-0123',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Niles Furniture Wholesale','Niles','Niles','7255 Oakton St, Niles, IL 60714',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8028,42.0180,NULL),NULL,NULL),0700,1600,30,2,'+1-847-555-0123');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Morton Grove Plastics','Morton Grove',
-    '8300 Waukegan Rd, Morton Grove, IL 60053',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7831,42.0386,NULL),NULL,NULL),
-    0700,1700,20,3,'+1-847-555-0124',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Morton Grove Plastics','Morton Grove','Morton Grove','8300 Waukegan Rd, Morton Grove, IL 60053',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7831,42.0386,NULL),NULL,NULL),0700,1700,20,3,'+1-847-555-0124');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Northbrook Distribution Hub','Northbrook',
-    '2101 Pfingsten Rd, Northbrook, IL 60062',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8281,42.1253,NULL),NULL,NULL),
-    0600,1800,25,2,'+1-847-555-0125',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Northbrook Distribution Hub','Northbrook','Northbrook','2101 Pfingsten Rd, Northbrook, IL 60062',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8281,42.1253,NULL),NULL,NULL),0600,1800,25,2,'+1-847-555-0125');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Glenview Aerospace Parts','Glenview',
-    '2901 Patriot Blvd, Glenview, IL 60026',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8281,42.0697,NULL),NULL,NULL),
-    0700,1600,20,2,'+1-847-555-0126',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Glenview Aerospace Parts','Glenview','Glenview','2901 Patriot Blvd, Glenview, IL 60026',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8281,42.0697,NULL),NULL,NULL),0700,1600,20,2,'+1-847-555-0126');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Arlington Heights Home Center','Arlington Heights',
-    '75 E Golf Rd, Arlington Heights, IL 60005',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9806,42.0884,NULL),NULL,NULL),
-    0800,1700,15,3,'+1-847-555-0127',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Arlington Heights Home Center','Arlington Heights','Arlington Heights','75 E Golf Rd, Arlington Heights, IL 60005',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9806,42.0884,NULL),NULL,NULL),0800,1700,15,3,'+1-847-555-0127');
 
 -- --- FAR WEST SUBURBS ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Hoffman Estates Auto Group','Hoffman Estates',
-    '1200 Higgins Rd, Hoffman Estates, IL 60169',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.0803,42.0428,NULL),NULL,NULL),
-    0800,1800,20,3,'+1-847-555-0128',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Hoffman Estates Auto Group','Hoffman Estates','Hoffman Estates','1200 Higgins Rd, Hoffman Estates, IL 60169',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.0803,42.0428,NULL),NULL,NULL),0800,1800,20,3,'+1-847-555-0128');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Bartlett Grain & Feed','Bartlett',
-    '1065 S Bartlett Rd, Bartlett, IL 60103',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1858,41.9953,NULL),NULL,NULL),
-    0600,1500,25,2,'+1-630-555-0129',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Bartlett Grain and Feed','Bartlett','Bartlett','1065 S Bartlett Rd, Bartlett, IL 60103',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1858,41.9953,NULL),NULL,NULL),0600,1500,25,2,'+1-630-555-0129');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Hanover Park Logistics','Hanover Park',
-    '2450 Irving Park Rd, Hanover Park, IL 60133',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1442,41.9980,NULL),NULL,NULL),
-    0700,1700,20,3,'+1-630-555-0130',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Hanover Park Logistics','Hanover Park','Hanover Park','2450 Irving Park Rd, Hanover Park, IL 60133',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1442,41.9980,NULL),NULL,NULL),0700,1700,20,3,'+1-630-555-0130');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Carol Stream Packaging','Carol Stream',
-    '360 Schmale Rd, Carol Stream, IL 60188',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1347,41.9145,NULL),NULL,NULL),
-    0700,1600,20,3,'+1-630-555-0131',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Carol Stream Packaging','Carol Stream','Carol Stream','360 Schmale Rd, Carol Stream, IL 60188',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1347,41.9145,NULL),NULL,NULL),0700,1600,20,3,'+1-630-555-0131');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Addison Engineering Supplies','Addison',
-    '16 W 561 Shore Dr, Addison, IL 60101',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9887,41.9314,NULL),NULL,NULL),
-    0800,1700,15,3,'+1-630-555-0132',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Addison Engineering Supplies','Addison','Addison','16 W 561 Shore Dr, Addison, IL 60101',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9887,41.9314,NULL),NULL,NULL),0800,1700,15,3,'+1-630-555-0132');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Wood Dale Aircraft Parts','Wood Dale',
-    '155 E Irving Park Rd, Wood Dale, IL 60191',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9848,41.9639,NULL),NULL,NULL),
-    0700,1600,20,2,'+1-630-555-0133',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Wood Dale Aircraft Parts','Wood Dale','Wood Dale','155 E Irving Park Rd, Wood Dale, IL 60191',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9848,41.9639,NULL),NULL,NULL),0700,1600,20,2,'+1-630-555-0133');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Bensenville Freight Terminal','Bensenville',
-    '333 N York Rd, Bensenville, IL 60106',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9445,41.9561,NULL),NULL,NULL),
-    0500,2000,30,1,'+1-630-555-0134',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Bensenville Freight Terminal','Bensenville','Bensenville','333 N York Rd, Bensenville, IL 60106',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9445,41.9561,NULL),NULL,NULL),0500,2000,30,1,'+1-630-555-0134');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Franklin Park Steel','Franklin Park',
-    '9401 Mannheim Rd, Franklin Park, IL 60131',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8781,41.9317,NULL),NULL,NULL),
-    0600,1600,25,2,'+1-708-555-0135',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Franklin Park Steel','Franklin Park','Franklin Park','9401 Mannheim Rd, Franklin Park, IL 60131',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8781,41.9317,NULL),NULL,NULL),0600,1600,25,2,'+1-708-555-0135');
 
 -- --- WESTERN SUBURBS ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Northlake Chemical Co','Northlake',
-    '301 N Wolf Rd, Northlake, IL 60164',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9008,41.9139,NULL),NULL,NULL),
-    0700,1600,20,2,'+1-708-555-0136',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Northlake Chemical Co','Northlake','Northlake','301 N Wolf Rd, Northlake, IL 60164',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9008,41.9139,NULL),NULL,NULL),0700,1600,20,2,'+1-708-555-0136');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Berkeley Food Service','Berkeley',
-    '5420 St Charles Rd, Berkeley, IL 60163',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8995,41.8894,NULL),NULL,NULL),
-    0500,1200,20,1,'+1-708-555-0137',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Berkeley Food Service','Berkeley','Berkeley','5420 St Charles Rd, Berkeley, IL 60163',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8995,41.8894,NULL),NULL,NULL),0500,1200,20,1,'+1-708-555-0137');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Hillside Data Center Supplies','Hillside',
-    '4343 Frontage Rd, Hillside, IL 60162',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9062,41.8714,NULL),NULL,NULL),
-    0800,1700,15,3,'+1-708-555-0138',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Hillside Data Center Supplies','Hillside','Hillside','4343 Frontage Rd, Hillside, IL 60162',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.9062,41.8714,NULL),NULL,NULL),0800,1700,15,3,'+1-708-555-0138');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Maywood Medical Distributors','Maywood',
-    '400 S 17th Ave, Maywood, IL 60153',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8408,41.8800,NULL),NULL,NULL),
-    0700,1500,25,1,'+1-708-555-0139',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Maywood Medical Distributors','Maywood','Maywood','400 S 17th Ave, Maywood, IL 60153',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.8408,41.8800,NULL),NULL,NULL),0700,1500,25,1,'+1-708-555-0139');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Berwyn Industrial Coatings','Berwyn',
-    '6725 W Cermak Rd, Berwyn, IL 60402',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7940,41.8503,NULL),NULL,NULL),
-    0700,1600,20,3,'+1-708-555-0140',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Berwyn Industrial Coatings','Berwyn','Berwyn','6725 W Cermak Rd, Berwyn, IL 60402',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.7940,41.8503,NULL),NULL,NULL),0700,1600,20,3,'+1-708-555-0140');
 
 -- --- SOUTH SIDE ---
-INSERT INTO fleet_customers VALUES (DEFAULT,'Pilsen Arts Foundation','Pilsen',
-    '1947 S Halsted St, Chicago, IL 60608',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6620,41.8546,NULL),NULL,NULL),
-    1000,1800,15,3,'+1-312-555-0141',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Pilsen Arts Foundation','Pilsen','Chicago','1947 S Halsted St, Chicago, IL 60608',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6620,41.8546,NULL),NULL,NULL),1000,1800,15,3,'+1-312-555-0141');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Bridgeport Auto Parts','Bridgeport',
-    '3150 S Halsted St, Chicago, IL 60608',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6546,41.8357,NULL),NULL,NULL),
-    0700,1700,20,3,'+1-312-555-0142',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Bridgeport Auto Parts','Bridgeport','Chicago','3150 S Halsted St, Chicago, IL 60608',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6546,41.8357,NULL),NULL,NULL),0700,1700,20,3,'+1-312-555-0142');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Hyde Park Laboratory','Hyde Park',
-    '5801 S Ellis Ave, Chicago, IL 60637',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.5935,41.8027,NULL),NULL,NULL),
-    0800,1800,25,2,'+1-312-555-0143',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Hyde Park Laboratory','Hyde Park','Chicago','5801 S Ellis Ave, Chicago, IL 60637',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.5935,41.8027,NULL),NULL,NULL),0800,1800,25,2,'+1-312-555-0143');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Woodlawn Community Grocers','Woodlawn',
-    '6333 S Cottage Grove Ave, Chicago, IL 60637',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.5992,41.7828,NULL),NULL,NULL),
-    0600,1200,30,1,'+1-312-555-0144',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Woodlawn Community Grocers','Woodlawn','Chicago','6333 S Cottage Grove Ave, Chicago, IL 60637',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.5992,41.7828,NULL),NULL,NULL),0600,1200,30,1,'+1-312-555-0144');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Chatham Building Materials','Chatham',
-    '7943 S Cottage Grove Ave, Chicago, IL 60619',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6215,41.7498,NULL),NULL,NULL),
-    0700,1600,20,3,'+1-312-555-0145',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Chatham Building Materials','Chatham','Chicago','7943 S Cottage Grove Ave, Chicago, IL 60619',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6215,41.7498,NULL),NULL,NULL),0700,1600,20,3,'+1-312-555-0145');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Roseland Emergency Clinic','Roseland',
-    '11117 S Michigan Ave, Chicago, IL 60628',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6287,41.6903,NULL),NULL,NULL),
-    0000,2359,15,1,'+1-312-555-0146',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Roseland Emergency Clinic','Roseland','Chicago','11117 S Michigan Ave, Chicago, IL 60628',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6287,41.6903,NULL),NULL,NULL),0000,2359,15,1,'+1-312-555-0146');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Kenwood Estate Wines','Kenwood',
-    '4800 S Cottage Grove Ave, Chicago, IL 60615',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.5993,41.8173,NULL),NULL,NULL),
-    1100,1900,15,3,'+1-312-555-0147',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Kenwood Estate Wines','Kenwood','Chicago','4800 S Cottage Grove Ave, Chicago, IL 60615',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.5993,41.8173,NULL),NULL,NULL),1100,1900,15,3,'+1-312-555-0147');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Bronzeville Recording Studio','Bronzeville',
-    '3500 S King Dr, Chicago, IL 60616',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6169,41.8360,NULL),NULL,NULL),
-    1000,2000,10,3,'+1-312-555-0148',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Bronzeville Recording Studio','Bronzeville','Chicago','3500 S King Dr, Chicago, IL 60616',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6169,41.8360,NULL),NULL,NULL),1000,2000,10,3,'+1-312-555-0148');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Douglas Textile Factory','Douglas',
-    '3600 S State St, Chicago, IL 60609',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6211,41.8422,NULL),NULL,NULL),
-    0700,1600,20,2,'+1-312-555-0149',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Douglas Textile Factory','Douglas','Chicago','3600 S State St, Chicago, IL 60609',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-87.6211,41.8422,NULL),NULL,NULL),0700,1600,20,2,'+1-312-555-0149');
 
-INSERT INTO fleet_customers VALUES (DEFAULT,'Streamwood Plastics Corp','Streamwood',
-    '1035 W Irving Park Rd, Streamwood, IL 60107',
-    SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1681,41.9908,NULL),NULL,NULL),
-    0700,1600,20,3,'+1-630-555-0150',SYSTIMESTAMP);
+INSERT INTO fleet_customers (customer_name,neighborhood,city,address,location,time_window_open,time_window_close,service_minutes,priority,contact_phone)
+VALUES ('Streamwood Plastics Corp','Streamwood','Streamwood','1035 W Irving Park Rd, Streamwood, IL 60107',SDO_GEOMETRY(2001,4326,SDO_POINT_TYPE(-88.1681,41.9908,NULL),NULL,NULL),0700,1600,20,3,'+1-630-555-0150');
 
 COMMIT;
 PROMPT    50 customers inserted.
@@ -482,10 +382,12 @@ DECLARE
     p_wt NUMBER, p_vol NUMBER, p_pri NUMBER,
     p_notes VARCHAR2 DEFAULT NULL
   ) IS
+    v_depot NUMBER;
   BEGIN
+    v_depot := get_depot(p_cust);   -- local fn call must be in PL/SQL, not SQL
     INSERT INTO fleet_orders (customer_id, depot_id, order_ref, order_date,
         delivery_date, weight_kg, volume_m3, priority, status, delivery_notes)
-    VALUES (p_cust, get_depot(p_cust), p_ref, TRUNC(SYSDATE), v_del_date,
+    VALUES (p_cust, v_depot, p_ref, TRUNC(SYSDATE), v_del_date,
         p_wt, p_vol, p_pri, 'PENDING', p_notes);
   END;
 

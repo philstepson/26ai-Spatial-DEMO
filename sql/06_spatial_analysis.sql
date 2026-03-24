@@ -8,6 +8,7 @@
 SET SERVEROUTPUT ON SIZE UNLIMITED
 SET ECHO OFF
 SET FEEDBACK ON
+SET DEFINE OFF
 SET LINESIZE 180
 SET PAGESIZE 60
 COLUMN metric         FORMAT A40
@@ -21,7 +22,7 @@ COLUMN similarity     FORMAT 0.999
 PROMPT
 PROMPT ============================================================
 PROMPT  Oracle 26ai | Fleet Spatial Optimization Demo
-PROMPT  Step 6/7 : Spatial & AI Vector Analysis Showcase
+PROMPT  Step 6/7 : Spatial + AI Vector Analysis Showcase
 PROMPT ============================================================
 PROMPT
 
@@ -86,7 +87,7 @@ SELECT v.vehicle_code,
        t.alert_code,
        t.recorded_at AS last_ping
 FROM   fleet_vehicles         v
-JOIN   fleet_vehicle_locations t USING (vehicle_id)    -- uses the view
+JOIN   vw_vehicle_locations t USING (vehicle_id)    -- uses the view
 JOIN   fleet_traffic_zones    tz
     ON tz.zone_type = 'CBD'
 WHERE  SDO_INSIDE(t.current_location, tz.zone_boundary) = 'TRUE';
@@ -195,11 +196,14 @@ PROMPT
 PROMPT ── Q8: Oracle 26ai JSON Duality View – orders as JSON docs ───
 PROMPT
 
-SELECT od.data
+-- Duality view returns one JSON document per order row.
+-- Use JSON_VALUE to filter; use JSON_SERIALIZE for display.
+SELECT JSON_SERIALIZE(od.data PRETTY)
 FROM   orders_duality od
-WHERE  JSON_VALUE(od.data, '$."status"')   = 'ASSIGNED'
-AND    JSON_VALUE(od.data, '$."priority"') = '1'
-ORDER  BY JSON_VALUE(od.data, '$."_id"' RETURNING NUMBER)
+WHERE  JSON_VALUE(od.data, '$.status')   = 'ASSIGNED'
+AND    JSON_VALUE(od.data, '$.priority'
+                 RETURNING NUMBER)       = 1
+ORDER  BY JSON_VALUE(od.data, '$._id' RETURNING NUMBER)
 FETCH FIRST 3 ROWS ONLY;
 
 -- ============================================================
@@ -221,11 +225,11 @@ SELECT
     END                        AS alert_description,
     t.recorded_at              AS alert_time
 FROM   fleet_vehicles         v
-JOIN   fleet_vehicle_locations t USING (vehicle_id)
+JOIN   vw_vehicle_locations t USING (vehicle_id)
 WHERE  t.alert_code IS NOT NULL
 ORDER  BY t.recorded_at DESC;
 
 PROMPT
-PROMPT  Spatial & AI Vector analysis complete.
+PROMPT  Spatial + AI Vector analysis complete.
 PROMPT  Next: run  @sql/07_report.sql  for the executive summary.
 PROMPT
