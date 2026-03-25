@@ -3,8 +3,15 @@
 -- Script : 00_master_run.sql
 -- Purpose: Single entry-point – runs all 7 steps in sequence
 --
+-- IMPORTANT: Run 00_prereq_setup.sql as ADMIN first (one time only).
+--            Then connect as fleet_demo before running this script.
+--
+-- Connect as fleet_demo:
+--   SQL> SET CLOUDCONFIG wallet/Wallet_YourDB.zip
+--   SQL> CONNECT fleet_demo/Fleet_Demo_2026#@yourdb_medium
+--
 -- Usage (SQLcl):
---   sql username/password@service_name @sql/00_master_run.sql
+--   SQL> @sql/00_master_run.sql
 --
 -- Or step-by-step (recommended for first run so you can review output):
 --   @sql/01_create_schema.sql

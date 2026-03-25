@@ -34,3 +34,21 @@ Open `tnsnames.ora` to find your service names:
 - `yourdb_high`   – parallel, high priority (DDL, bulk loads)
 - `yourdb_medium` – balanced (recommended for this demo)
 - `yourdb_low`    – background / batch queries
+
+## Connecting
+
+**Step 1 — First-time setup (run once as ADMIN):**
+```sql
+sql /nolog
+SQL> SET CLOUDCONFIG wallet/Wallet_YourDB.zip
+SQL> CONNECT admin/YourAdminPassword@yourdb_medium
+SQL> @sql/00_prereq_setup.sql
+```
+
+**Step 2 — Connect as fleet_demo for all demo scripts:**
+```sql
+SQL> CONNECT fleet_demo/Fleet_Demo_2026#@yourdb_medium
+SQL> @sql/00_master_run.sql
+```
+
+> Change the default password `Fleet_Demo_2026#` before using in any non-demo environment.

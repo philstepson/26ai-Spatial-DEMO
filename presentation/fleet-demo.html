@@ -592,6 +592,15 @@ CREATE VECTOR INDEX idx_fleet_ro_vector
   WITH TARGET ACCURACY 95;
 -- ↑ Oracle 26ai HNSW approximate nearest-neighbour</code></pre>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>R-Tree index: each node stores a Minimum Bounding Rectangle (MBR) covering a subset of geometries. A proximity query does a two-pass search — filter (MBR overlap) then refine (exact geometry test). Only candidates whose MBR overlaps the query region are refined.</li>
+      <li>USER_SDO_GEOM_METADATA must be populated before CREATE INDEX. It registers the bounding box (Chicago metro) and SRID. Forgetting this step is the #1 SDO setup error.</li>
+      <li>Eight spatial indexes in this demo — one per spatial column. Each enables different operator pairs in the analysis queries: SDO_NN on depots, SDO_WITHIN_DISTANCE on customers, SDO_INSIDE on traffic zones.</li>
+      <li>SPATIAL_INDEX_V2 is the current generation index (Oracle 12.2+). V2 supports geodetic coordinates (SRID 4326) natively, handles antimeridian crossing, and supports partitioned tables.</li>
+      <li>The HNSW VECTOR index on the same slide shares session memory with the R-Tree — both are native Oracle index types, managed under the same transaction and backup model.</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -655,6 +664,15 @@ WHERE  SDO_INSIDE(
       </div>
     </div>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>SDO_WITHIN_DISTANCE uses a two-pass R-Tree approach: pass 1 (filter) finds MBR candidates; pass 2 (refine) applies exact distance. The tolerance parameter (0.005 degrees ≈ 500 m) controls filter precision — never produces false negatives.</li>
+      <li>SDO_NN traverses the R-Tree outward from the reference point until sdo_num_res neighbours are found. The second numeric argument (1) is the batch hint — Oracle uses it to optimise the query plan for joins. Setting sdo_num_res=1 returns the single nearest neighbour.</li>
+      <li>SDO_INSIDE is a point-in-polygon test. Oracle uses a ray-casting algorithm after the R-Tree filter narrows candidates to polygons whose MBR contains the point.</li>
+      <li>All three operators return the string 'TRUE' for matching rows — this is Oracle Spatial convention. The = 'TRUE' predicate must be present for the spatial index to be used.</li>
+      <li>These three operators map to the three VRP use cases: depot assignment (SDO_NN), zone surcharge detection (SDO_WITHIN_DISTANCE), and CBD congestion check (SDO_INSIDE).</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -725,6 +743,15 @@ FROM   fleet_routes_optimized
 ORDER  BY similarity
 FETCH  FIRST 5 ROWS ONLY;</code></pre>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>HNSW (Hierarchical Navigable Small World) pre-builds a multi-layer graph. The top layer is a sparse "highway" graph; lower layers get denser. Query enters the top layer and greedily descends, collecting nearest-neighbour candidates — O(log n) vs O(n) brute force.</li>
+      <li>VECTOR(128, FLOAT32) = 512 bytes per route, stored natively in the Oracle row. No separate vector store, no ETL, no synchronisation. The vector and the relational columns are in the same data block.</li>
+      <li>Cosine similarity = 1 − cosine_distance. Score 1.0 = identical route (same route compared to itself). Score ~0.95 = same depot, similar neighbourhood cluster. Score &lt; 0.80 = geometrically dissimilar routes.</li>
+      <li>128 dimensions encode: centroid lat/lon, geographic spread, stop count, total distance, depot (one-hot), time-window stats, directional bearing features, Fourier-style shape harmonics.</li>
+      <li>TARGET ACCURACY 95 means the HNSW search returns 95% of the true nearest neighbours on average. For fleet routing use cases, 5% recall loss is operationally acceptable and delivers 10-100x speed improvement over exact search.</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -792,6 +819,14 @@ FETCH  FIRST 5 ROWS ONLY;
 --        2 |    39.1 |      35.8 |      0.941
 --       11 |    44.7 |      33.1 |      0.928</code></pre>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>The ORDER BY VECTOR_DISTANCE(...) pattern is what triggers the HNSW index. Oracle recognises this exact form and uses the graph for approximate nearest-neighbour traversal rather than full scan.</li>
+      <li>Score 1.0 is the reference route compared to itself — always the top result. Scores 0.928–0.982 correspond to routes from the same depot serving geographically adjacent zones.</li>
+      <li>Use cases: find historical routes matching today's orders (reuse past optimisations), identify drivers familiar with a route pattern, detect anomalous routes that score &lt; 0.70 against all historical routes.</li>
+      <li>HNSW vs exact: exact brute-force is O(n) per query; HNSW is O(log n). At 1,000 stored routes the difference is small; at 1 million historical routes (2 years of a large fleet) HNSW is 1000x faster.</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -923,6 +958,15 @@ FROM   orders_duality od
 WHERE  JSON_VALUE(od.data,'$.status')   = 'ASSIGNED'
 AND    JSON_VALUE(od.data,'$.priority') = '1';</code></pre>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>No JSON is stored. The duality view assembles the document at query time from B-Tree lookups across fleet_orders, fleet_customers, and fleet_depots. If a customer address changes, the next query returns the updated document instantly — no ETL or cache refresh needed.</li>
+      <li>Write-through decomposition: an INSERT or UPDATE through the duality view is automatically decomposed into relational DML. Oracle checks all FK constraints and NOT NULL rules against the underlying tables. The WITH INSERT UPDATE DELETE clause makes the view fully bidirectional.</li>
+      <li>This is not the same as SODA collections: SODA stores actual JSON documents. Duality views project relational data as JSON — the relational schema is always the source of truth.</li>
+      <li>MongoDB Compass can connect to Oracle 26ai's MongoDB-compatible endpoint and browse orders_duality as a collection. A find({status:"ASSIGNED"}) is transparently translated to the SQL query against the duality view.</li>
+      <li>Key talking point: "Same physical data — three different apps see it as rows, as a REST resource via ORDS, and as a MongoDB document. Zero synchronisation lag between them."</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -1108,7 +1152,7 @@ END LOOP;</code></pre>
     </div>
   </div>
   <div style="margin-top:20px;font-size:0.45em;color:#888;text-align:center;">
-    Run all steps at once:  <code style="color:#e8a838;">sql fleet_demo/password@yourdb_medium  @sql/00_master_run.sql</code>
+    Run all steps at once (as fleet_demo):  <code style="color:#e8a838;">CONNECT fleet_demo/Fleet_Demo_2026#@yourdb_medium</code> then <code style="color:#e8a838;">@sql/00_master_run.sql</code>
   </div>
 </section>
 
@@ -1177,6 +1221,15 @@ END LOOP;
 --   Stop 3: Park Ridge → Hyde Park (55 km south)
 --   ← criss-crossing the entire city!</code></pre>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>Haversine formula: a = sin²(Δlat/2) + cos(lat1)·cos(lat2)·sin²(Δlon/2); d = 6371 × 2·atan2(√a, √(1−a)). Great-circle distance — same math inside a GPS receiver.</li>
+      <li>The ×1.35 urban factor converts crow-fly km to road-km. Chicago's street grid means actual driving is 25–35% longer than straight-line distance.</li>
+      <li>Round-robin: vehicle 1 gets orders 1, 16, 31, 46… — consecutive order IDs span the entire metro. Each truck zig-zags city-wide because arrival time has no geographic correlation.</li>
+      <li>All 15 vehicles dispatched, ~855 km total, ~$2,420/day. Three vehicles are wasted due purely to the assignment method.</li>
+      <li>Key line: "The geographic chaos is invisible on a spreadsheet but shows up immediately in a fuel bill."</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -1249,6 +1302,15 @@ SET    route_vector = make_route_vector(
        )
 WHERE  route_id = v_route_id;</code></pre>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>Nearest-neighbour heuristic: at each step, scan all unserved feasible orders and pick the lowest score. O(n²) per vehicle — fast enough for 75 orders, within 20-25% of optimal.</li>
+      <li>Priority score formula: score = haversine(current, stop) / (4 − priority). Priority 1 URGENT gets a ÷3 discount — it appears 3× closer than it is, so it is picked first.</li>
+      <li>Two feasibility gates per candidate: (1) payload + order_weight ≤ vehicle_max_payload, (2) estimated_arrival ≤ time_window_close. Both must pass or the stop is skipped this iteration.</li>
+      <li>VECTOR embedding: 128 floats encode route centroid, geographic spread, stop count, total distance, depot, and Fourier-style directional features. Two routes with similar footprint get cosine similarity > 0.90.</li>
+      <li>Result: same 75 orders, 12 vehicles instead of 15, ~575 km vs ~855 km. Three vehicles are freed — available for other routes or maintenance.</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -1317,6 +1379,15 @@ WHILE elapsed_min < segment_min LOOP
   elapsed := elapsed + 5;   -- next ping in 5 min
 END LOOP;</code></pre>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>Range partition routing is automatic: Oracle inspects the recorded_at timestamp and writes to the correct quarterly partition with no application logic. Query with WHERE recorded_at &gt;= TRUNC(SYSDATE) and Oracle eliminates 5 of 6 partitions before touching a single row.</li>
+      <li>Spatial index on fleet_telemetry.location works per-partition. "Vehicles within 2 km of depot right now" is a spatial scan of only the current-quarter partition — sub-10ms at 2M rows.</li>
+      <li>Status state machine: IDLE (at depot) → DRIVING (in transit) → DELIVERING (at customer, speed=0). Transition logic is pure position-in-route arithmetic.</li>
+      <li>Alert thresholds: FUEL when fuel_level_pct &lt; 15, TEMP when engine_temp_c &gt; 95, SPD when speed_kmh &gt; 90. Generated deterministically — no random noise on alert generation.</li>
+      <li>In production at ~200 pings/vehicle/day this table grows to 2.1M rows over 2 years. Partition pruning keeps queries at the same speed regardless of historical volume.</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -1405,6 +1476,15 @@ WHERE  route_date = TRUNC(SYSDATE)+1;</code></pre>
       </div>
     </div>
   </div>
+  <aside class="notes">
+    <ul>
+      <li>vw_route_comparison is a view that joins aggregated totals from fleet_routes_baseline and fleet_routes_optimized on the same route_date. One SQL SELECT — the database does all the comparison math.</li>
+      <li>Savings % formula: (1 − opt_total_km / base_total_km) × 100. At 575/855 = 32.7%, rounded to 33%.</li>
+      <li>Three vehicles freed (15 → 12 dispatched) means 20% of the fleet is available for special runs, maintenance, or standby — that capacity has tangible value beyond fuel cost.</li>
+      <li>CO2 is differentiated by fuel type: diesel ~0.27 kg/km, hybrid ~0.16 kg/km, electric 0 kg/km. The fleet mix means total CO2 is not a simple distance × constant.</li>
+      <li>The bar chart renders live from hard-coded demo values — in a real deployment these numbers would come from a live SELECT against the view.</li>
+    </ul>
+  </aside>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════
@@ -1539,9 +1619,9 @@ WHERE route_date = TRUNC(SYSDATE)+1;</code></pre>
         <ol style="padding-left:16px;color:#ccc;font-size:0.95em;line-height:1.8;">
           <li>Install <strong>Oracle Developer Tools for VSCode</strong></li>
           <li>Open Oracle Explorer panel</li>
-          <li>Add Connection → Cloud Wallet</li>
-          <li>Select <code>Wallet_YourDB.zip</code></li>
-          <li>Right-click <code>.sql</code> → Run in SQLcl</li>
+          <li>Add Connection → Cloud Wallet (as <code>admin</code>, run <code>00_prereq_setup.sql</code> once)</li>
+          <li>Reconnect as <code>fleet_demo</code></li>
+          <li>Right-click <code>00_master_run.sql</code> → Run in SQLcl</li>
         </ol>
       </div>
       <div class="card gold">
@@ -1550,18 +1630,18 @@ WHERE route_date = TRUNC(SYSDATE)+1;</code></pre>
           <li>Download SQLcl from oracle.com/tools/sqlcl</li>
           <li>Requires Java 11+</li>
           <li>Add <code>bin/</code> to PATH</li>
-          <li>Connect as shown →</li>
+          <li>Follow steps shown → (ADMIN once, then fleet_demo)</li>
         </ol>
       </div>
     </div>
-    <pre><code class="language-sql">-- ── Option B: SQLcl CLI connection ───────────
+    <pre><code class="language-sql">-- ── Step 1 (ONCE): Run as ADMIN to create fleet_demo ──
 sql /nolog
-
-SQL> -- Point at your wallet ZIP (no extraction needed)
 SQL> SET CLOUDCONFIG wallet/Wallet_YourDB.zip
+SQL> CONNECT admin/YourAdminPassword@yourdb_medium
+SQL> @sql/00_prereq_setup.sql
 
-SQL> -- Connect (service names in tnsnames.ora)
-SQL> CONNECT fleet_demo/YourPassword@yourdb_medium
+-- ── Step 2: Reconnect as fleet_demo ──────────────────
+SQL> CONNECT fleet_demo/Fleet_Demo_2026#@yourdb_medium
 
 SQL> -- Verify
 SQL> SELECT BANNER_FULL FROM v$version;
@@ -1588,7 +1668,8 @@ $ sql /nolog -mcp
       }
     }
   }
-}</code></pre>
+}
+-- Then in Claude: CONNECT fleet_demo/Fleet_Demo_2026#@yourdb_medium</code></pre>
   </div>
 </section>
 

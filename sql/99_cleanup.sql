@@ -10,6 +10,17 @@ SET ECHO OFF
 PROMPT Cleaning up Fleet Optimization demo objects...
 
 BEGIN
+  -- Drop SODA collection (optional step 8)
+  DECLARE
+    v_status NUMBER;
+  BEGIN
+    v_status := DBMS_SODA.drop_collection('fleet_orders_docs');
+    IF v_status = 1 THEN
+      DBMS_OUTPUT.PUT_LINE('  Dropped SODA collection: fleet_orders_docs');
+    END IF;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
   -- Drop views
   FOR v IN (SELECT view_name FROM user_views
             WHERE view_name LIKE 'VW_FLEET%'

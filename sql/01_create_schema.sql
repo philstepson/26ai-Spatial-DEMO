@@ -510,6 +510,7 @@ SELECT
     t.speed_kmh,
     t.heading_deg,
     t.fuel_level_pct,
+    t.engine_temp_c,
     t.recorded_at        AS last_ping,
     t.alert_code,
     t.location           AS current_location

@@ -1,7 +1,8 @@
 {
   "comment": "MCP server configuration for Claude + SQLcl integration.",
   "comment2": "Add this block to your Claude Desktop or VSCode MCP settings.",
-  "comment3": "Replace <WALLET_PATH>, <USERNAME>, <PASSWORD>, <SERVICE> with your values.",
+  "comment3": "Replace <WALLET_PATH> and <SERVICE> with your values. User is fleet_demo.",
+  "comment4": "PREREQUISITE: Run sql/00_prereq_setup.sql as ADMIN before connecting.",
 
   "mcpServers": {
     "oracle-fleet-db": {
@@ -15,7 +16,7 @@
       },
       "comment": "SQLcl MCP server. After connecting Claude will issue:",
       "comment2": "  SET CLOUDCONFIG <WALLET_PATH>/Wallet_YourDB.zip",
-      "comment3": "  CONNECT <USERNAME>/<PASSWORD>@<SERVICE>"
+      "comment3": "  CONNECT fleet_demo/Fleet_Demo_2026#@<SERVICE>"
     }
   }
 }

@@ -85,7 +85,7 @@ SELECT v.vehicle_code,
        v.status,
        t.speed_kmh,
        t.alert_code,
-       t.recorded_at AS last_ping
+       t.last_ping
 FROM   fleet_vehicles         v
 JOIN   vw_vehicle_locations t USING (vehicle_id)    -- uses the view
 JOIN   fleet_traffic_zones    tz
@@ -146,6 +146,7 @@ ORDER  BY customers_in_zone DESC;
 PROMPT
 PROMPT ── Q6: Oracle 26ai VECTOR SEARCH – similar routes ──────────
 PROMPT        (HNSW approximate nearest-neighbour cosine similarity)
+PROMPT        Anchor: route #3
 PROMPT
 
 SELECT route_id,
@@ -158,7 +159,7 @@ SELECT route_id,
        ROUND(1 - VECTOR_DISTANCE(
                route_vector,
                (SELECT route_vector FROM fleet_routes_optimized
-                WHERE  route_id = (SELECT MIN(route_id) FROM fleet_routes_optimized)),
+                WHERE  route_id = 3),
                COSINE
              ), 3)                  AS similarity
 FROM   fleet_routes_optimized
@@ -223,11 +224,11 @@ SELECT
         WHEN 'SPD'  THEN 'Speed violation – ' || t.speed_kmh || ' km/h'
         ELSE 'Unknown alert'
     END                        AS alert_description,
-    t.recorded_at              AS alert_time
+    t.last_ping                AS alert_time
 FROM   fleet_vehicles         v
 JOIN   vw_vehicle_locations t USING (vehicle_id)
 WHERE  t.alert_code IS NOT NULL
-ORDER  BY t.recorded_at DESC;
+ORDER  BY t.last_ping DESC;
 
 PROMPT
 PROMPT  Spatial + AI Vector analysis complete.

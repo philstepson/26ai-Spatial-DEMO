@@ -10,8 +10,8 @@
 WALLET_LOCATION=/path/to/your/wallet/Wallet_YourDB.zip
 
 # ── Connection credentials ──────────────────────────────────────────────────
-DB_USERNAME=fleet_demo          # or ADMIN for first run
-DB_PASSWORD=YourSecureP@ssword1!
+DB_USERNAME=fleet_demo
+DB_PASSWORD=Fleet_Demo_2026#    # Change this before non-demo use
 
 # ── Service name ─────────────────────────────────────────────────────────────
 # Find available service names inside wallet/tnsnames.ora
@@ -21,4 +21,4 @@ DB_SERVICE=yourdb_medium
 # ── SQLcl connection string ──────────────────────────────────────────────────
 # Use this in SQLcl after SET CLOUDCONFIG:
 #   SET CLOUDCONFIG /path/to/Wallet_YourDB.zip
-#   CONNECT fleet_demo/YourSecureP@ssword1!@yourdb_medium
+#   CONNECT fleet_demo/Fleet_Demo_2026#@yourdb_medium
