@@ -258,6 +258,7 @@ Pro ($20/month) is sufficient for occasional demos; Max ($100/month) for heavy d
     ├── 05_telemetry_stream.sql      ← Simulated GPS telemetry
     ├── 06_spatial_analysis.sql      ← 9 showcase spatial + AI queries
     ├── 07_report.sql                ← Executive before/after report
+    ├── 08_soda_orders.sql           ← Optional: SODA collection for MongoDB Compass demo
     └── 99_cleanup.sql               ← Drop all demo objects
 ```
 
