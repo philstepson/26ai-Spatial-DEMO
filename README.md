@@ -170,9 +170,9 @@ MongoDB Compass connection string (after running `08_soda_orders.sql`):
 mongodb://fleet_demo:Fleet_Demo_2026#@<your-host>:27017/fleet_demo?authMechanism=PLAIN&authSource=$external&ssl=true&retryWrites=false&loadBalanced=true
 ```
 
-### Option C — Claude + SQLcl MCP Server
+### Option C — Claude Code + SQLcl MCP Server
 
-This lets Claude query your database directly via natural language.
+This lets Claude drive the demo and answer ad-hoc questions via natural language against live data.
 
 1. Start the SQLcl MCP server:
    ```bash
@@ -193,6 +193,42 @@ This lets Claude query your database directly via natural language.
    - *"Show me the before/after cost comparison"*
    - *"Find routes similar to route #3 using vector search"*
    - *"Which vehicles are currently inside the CBD zone?"*
+
+---
+
+## Claude Code Access Options
+
+Claude Code is required for Option C (MCP-driven demo). Three ways to get access:
+
+### Free tier
+Claude Code includes a free usage tier — no Pro subscription required.
+Suitable for development and testing. May hit rate limits during a heavy live demo
+(multiple script runs + sustained Q&A). Check current limits at
+**https://claude.ai/code** before relying on free tier for a live presentation.
+
+### API key (recommended for live demos)
+Use your own Anthropic API key — no subscription needed, pay only for what you use.
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+Purchase credits in dollar increments at **https://console.anthropic.com**.
+
+> **Typical cost estimate:** A full demo run (scripts 01–08 + 8 ad-hoc questions)
+> uses approximately 60,000–80,000 tokens, costing roughly **$0.50–$1.50** with
+> Claude Sonnet (the default model). Budget **$10–20 per presenter** to cover
+> test runs plus the live demo with comfortable headroom.
+>
+> ⚠️ *Token pricing changes regularly — verify current rates at
+> https://www.anthropic.com/pricing before planning a demo budget.*
+
+### Pro / Max subscription
+Covers Claude Code usage within the subscription's included limits.
+Pro ($20/month) is sufficient for occasional demos; Max ($100/month) for heavy daily use.
+
+> ⚠️ *Subscription pricing and tier names may change — check https://www.anthropic.com/pricing
+> for current options.*
 
 ---
 
