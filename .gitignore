@@ -20,3 +20,6 @@ Thumbs.db
 # Editor
 *.swp
 *~
+
+# Personal files
+resume
